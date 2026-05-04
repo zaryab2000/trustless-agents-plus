@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {UniversalAccountId} from "./Types.sol";
+import {UniversalAccountId} from "../libraries/Types.sol";
 
 /// @title IUEAFactory
 /// @notice Minimal interface for the Push Chain UEA Factory.

@@ -14,7 +14,7 @@ import {
     InvalidRegistryAddress,
     IdentityNotTransferable,
     MaxShadowsExceeded
-} from "./Errors.sol";
+} from "../libraries/Errors.sol";
 
 /// @title IUAIRegistry
 /// @notice ERC-8004-compatible Universal Agent Identity Registry on Push Chain.

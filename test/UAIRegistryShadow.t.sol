@@ -3,10 +3,10 @@ pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {UAIRegistry} from "src/UAIRegistry.sol";
-import {IUAIRegistry} from "src/IUAIRegistry.sol";
-import "src/Errors.sol";
+import {IUAIRegistry} from "src/interfaces/IUAIRegistry.sol";
+import "src/libraries/Errors.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
-import {UniversalAccountId} from "src/interfaces/Types.sol";
+import {UniversalAccountId} from "src/libraries/Types.sol";
 import {
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";

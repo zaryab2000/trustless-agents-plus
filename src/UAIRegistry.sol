@@ -19,8 +19,8 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {IUEAFactory} from "./interfaces/IUEAFactory.sol";
-import {UniversalAccountId} from "./interfaces/Types.sol";
-import {IUAIRegistry} from "./IUAIRegistry.sol";
+import {UniversalAccountId} from "./libraries/Types.sol";
+import {IUAIRegistry} from "./interfaces/IUAIRegistry.sol";
 import {
     AgentNotRegistered,
     AgentCardHashRequired,
@@ -34,7 +34,7 @@ import {
     InvalidRegistryAddress,
     IdentityNotTransferable,
     MaxShadowsExceeded
-} from "./Errors.sol";
+} from "./libraries/Errors.sol";
 
 /// @title UAIRegistry
 /// @notice ERC-8004-compatible Universal Agent Identity Registry on Push Chain.
