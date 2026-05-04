@@ -171,6 +171,9 @@ contract UAIRegistry is
         if (req.registryAddress == address(0)) {
             revert InvalidRegistryAddress();
         }
+        if (req.proofType != ShadowProofType.OWNER_KEY_SIGNED) {
+            revert UnsupportedProofType();
+        }
         if (req.deadline < block.timestamp) {
             revert ShadowLinkExpired(req.deadline);
         }

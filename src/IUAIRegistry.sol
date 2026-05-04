@@ -87,8 +87,8 @@ interface IUAIRegistry {
     // ──────────────────────────────────────────────
 
     error AgentNotRegistered(uint256 agentId);
-    error NotAgentOwner(uint256 agentId, address caller);
     error AgentCardHashRequired();
+    error UnsupportedProofType();
     error ShadowAlreadyClaimed(
         string chainNamespace,
         string chainId,
