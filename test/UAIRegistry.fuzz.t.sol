@@ -3,9 +3,10 @@ pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {UAIRegistry} from "src/UAIRegistry.sol";
-import {IUAIRegistry} from "src/IUAIRegistry.sol";
+import {IUAIRegistry} from "src/interfaces/IUAIRegistry.sol";
+import "src/libraries/Errors.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
-import {UniversalAccountId} from "src/interfaces/Types.sol";
+import {UniversalAccountId} from "src/libraries/Types.sol";
 import {
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -79,14 +80,16 @@ contract UAIRegistryFuzz is Test {
         assertEq(registry.ownerOf(agentId), caller);
     }
 
-    function testFuzz_LinkShadow_OnlyAcceptsCorrectSigner(
-        uint256 signerKey,
+    function testFuzz_LinkShadow_WrongSignerReverts(
+        uint256 wrongKey,
         uint256 shadowAgentId
     ) public {
-        signerKey = bound(signerKey, 1, type(uint128).max);
+        wrongKey = bound(wrongKey, 1, type(uint128).max);
         shadowAgentId = bound(shadowAgentId, 1, type(uint128).max);
 
-        address caller = makeAddr("fuzzCaller");
+        (address caller, uint256 callerKey) = makeAddrAndKey("fuzzCaller");
+        vm.assume(wrongKey != callerKey);
+
         vm.prank(caller);
         registry.register("ipfs://fuzz", CARD_HASH);
 
@@ -105,7 +108,7 @@ contract UAIRegistryFuzz is Test {
         bytes32 digest = keccak256(
             abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
         );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, digest);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongKey, digest);
 
         IUAIRegistry.ShadowLinkRequest memory req = IUAIRegistry.ShadowLinkRequest({
             chainNamespace: "eip155",
@@ -119,15 +122,8 @@ contract UAIRegistryFuzz is Test {
         });
 
         vm.prank(caller);
+        vm.expectRevert(InvalidShadowSignature.selector);
         registry.linkShadow(req);
-
-        (address canonical,) = registry.canonicalUEAFromShadow(
-            "eip155",
-            "1",
-            address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
-            shadowAgentId
-        );
-        assertEq(canonical, caller);
     }
 
     function testFuzz_ShadowDedup_NoDuplicates(

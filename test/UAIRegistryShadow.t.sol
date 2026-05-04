@@ -3,9 +3,10 @@ pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {UAIRegistry} from "src/UAIRegistry.sol";
-import {IUAIRegistry} from "src/IUAIRegistry.sol";
+import {IUAIRegistry} from "src/interfaces/IUAIRegistry.sol";
+import "src/libraries/Errors.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
-import {UniversalAccountId} from "src/interfaces/Types.sol";
+import {UniversalAccountId} from "src/libraries/Types.sol";
 import {
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -135,7 +136,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 42,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "1",
@@ -194,7 +195,7 @@ contract UAIRegistryShadowTest is Test {
         vm.prank(nobody);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.AgentNotRegistered.selector,
+                AgentNotRegistered.selector,
                 uint256(uint160(nobody))
             )
         );
@@ -208,7 +209,7 @@ contract UAIRegistryShadowTest is Test {
         vm.prank(ueaUser);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.ShadowLinkExpired.selector, req.deadline
+                ShadowLinkExpired.selector, req.deadline
             )
         );
         registry.linkShadow(req);
@@ -227,7 +228,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "8453",
@@ -241,13 +242,13 @@ contract UAIRegistryShadowTest is Test {
         });
 
         vm.expectRevert(
-            abi.encodeWithSelector(IUAIRegistry.ShadowLinkNonceUsed.selector, 1)
+            abi.encodeWithSelector(ShadowLinkNonceUsed.selector, 1)
         );
         registry.linkShadow(req2);
         vm.stopPrank();
     }
 
-    function test_LinkShadow_AnyValidSignature_Succeeds() public {
+    function test_LinkShadow_WrongSigner_Reverts() public {
         (, uint256 otherKey) = makeAddrAndKey("otherSigner");
 
         IUAIRegistry.ShadowLinkRequest memory req = IUAIRegistry.ShadowLinkRequest({
@@ -271,9 +272,8 @@ contract UAIRegistryShadowTest is Test {
         });
 
         vm.prank(ueaUser);
+        vm.expectRevert(InvalidShadowSignature.selector);
         registry.linkShadow(req);
-
-        assertTrue(registry.getShadows(uint256(uint160(ueaUser))).length == 1);
     }
 
     function test_LinkShadow_GarbageSignature_Reverts() public {
@@ -289,7 +289,7 @@ contract UAIRegistryShadowTest is Test {
         });
 
         vm.prank(ueaUser);
-        vm.expectRevert(IUAIRegistry.InvalidShadowSignature.selector);
+        vm.expectRevert(InvalidShadowSignature.selector);
         registry.linkShadow(req);
     }
 
@@ -298,7 +298,7 @@ contract UAIRegistryShadowTest is Test {
         req.chainNamespace = "";
 
         vm.prank(ueaUser);
-        vm.expectRevert(IUAIRegistry.InvalidChainIdentifier.selector);
+        vm.expectRevert(InvalidChainIdentifier.selector);
         registry.linkShadow(req);
     }
 
@@ -307,7 +307,7 @@ contract UAIRegistryShadowTest is Test {
         req.chainId = "";
 
         vm.prank(ueaUser);
-        vm.expectRevert(IUAIRegistry.InvalidChainIdentifier.selector);
+        vm.expectRevert(InvalidChainIdentifier.selector);
         registry.linkShadow(req);
     }
 
@@ -316,7 +316,7 @@ contract UAIRegistryShadowTest is Test {
         req.registryAddress = address(0);
 
         vm.prank(ueaUser);
-        vm.expectRevert(IUAIRegistry.InvalidRegistryAddress.selector);
+        vm.expectRevert(InvalidRegistryAddress.selector);
         registry.linkShadow(req);
     }
 
@@ -333,7 +333,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 42,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "1",
@@ -348,7 +348,7 @@ contract UAIRegistryShadowTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.ShadowAlreadyClaimed.selector,
+                ShadowAlreadyClaimed.selector,
                 "eip155",
                 "1",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
@@ -401,7 +401,7 @@ contract UAIRegistryShadowTest is Test {
         vm.prank(ueaUser2);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.ShadowAlreadyClaimed.selector,
+                ShadowAlreadyClaimed.selector,
                 "eip155",
                 "1",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
@@ -424,7 +424,7 @@ contract UAIRegistryShadowTest is Test {
                 shadowAgentId: i,
                 proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
                 proofData: _signShadowLinkProper(
-                    shadowOwnerKey,
+                    ueaUserKey,
                     ueaUser,
                     "eip155",
                     chainId,
@@ -446,7 +446,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 999,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "999",
@@ -461,7 +461,7 @@ contract UAIRegistryShadowTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.MaxShadowsExceeded.selector, agentId
+                MaxShadowsExceeded.selector, agentId
             )
         );
         registry.linkShadow(req65);
@@ -479,7 +479,7 @@ contract UAIRegistryShadowTest is Test {
                 shadowAgentId: i,
                 proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
                 proofData: _signShadowLinkProper(
-                    shadowOwnerKey,
+                    ueaUserKey,
                     ueaUser,
                     "eip155",
                     chainId,
@@ -524,7 +524,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "8453",
@@ -545,7 +545,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 8,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "42161",
@@ -627,7 +627,7 @@ contract UAIRegistryShadowTest is Test {
         vm.prank(nobody);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.AgentNotRegistered.selector,
+                AgentNotRegistered.selector,
                 uint256(uint160(nobody))
             )
         );
@@ -642,7 +642,7 @@ contract UAIRegistryShadowTest is Test {
         vm.prank(ueaUser);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.ShadowNotFound.selector,
+                ShadowNotFound.selector,
                 "eip155",
                 "1",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432)
@@ -674,7 +674,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 42,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "1",
@@ -708,7 +708,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey, ueaUser, "eip155", "8453",
+                ueaUserKey, ueaUser, "eip155", "8453",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), 17, 2,
                 block.timestamp + 1 hours
             ),
@@ -724,7 +724,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 8,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey, ueaUser, "eip155", "42161",
+                ueaUserKey, ueaUser, "eip155", "42161",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), 8, 3,
                 block.timestamp + 1 hours
             ),
@@ -860,7 +860,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey, ueaUser, "eip155", "8453",
+                ueaUserKey, ueaUser, "eip155", "8453",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), 17, 2,
                 block.timestamp + 1 hours
             ),

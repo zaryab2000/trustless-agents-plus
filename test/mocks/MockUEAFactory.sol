@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import {IUEAFactory} from "src/interfaces/IUEAFactory.sol";
-import {UniversalAccountId} from "src/interfaces/Types.sol";
+import {UniversalAccountId} from "src/libraries/Types.sol";
 
 contract MockUEAFactory is IUEAFactory {
     mapping(address => UniversalAccountId) private _origins;

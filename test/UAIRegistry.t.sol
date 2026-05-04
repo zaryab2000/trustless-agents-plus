@@ -3,9 +3,10 @@ pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {UAIRegistry} from "src/UAIRegistry.sol";
-import {IUAIRegistry} from "src/IUAIRegistry.sol";
+import {IUAIRegistry} from "src/interfaces/IUAIRegistry.sol";
+import "src/libraries/Errors.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
-import {UniversalAccountId} from "src/interfaces/Types.sol";
+import {UniversalAccountId} from "src/libraries/Types.sol";
 import {
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -95,9 +96,25 @@ contract UAIRegistryTest is Test {
         assertEq(rec.originChainNamespace, "eip155");
     }
 
+    function test_Register_Update_EmitsEvents() public {
+        vm.startPrank(ueaUser);
+        uint256 agentId = registry.register(AGENT_URI, CARD_HASH);
+
+        string memory newURI = "ipfs://QmUpdated";
+        bytes32 newHash = keccak256("updated-card");
+
+        vm.expectEmit(true, false, false, true);
+        emit IUAIRegistry.AgentURIUpdated(agentId, newURI);
+        vm.expectEmit(true, false, false, true);
+        emit IUAIRegistry.AgentCardHashUpdated(agentId, newHash);
+
+        registry.register(newURI, newHash);
+        vm.stopPrank();
+    }
+
     function test_Register_ZeroCardHash_Reverts() public {
         vm.prank(ueaUser);
-        vm.expectRevert(IUAIRegistry.AgentCardHashRequired.selector);
+        vm.expectRevert(AgentCardHashRequired.selector);
         registry.register(AGENT_URI, bytes32(0));
     }
 
@@ -165,7 +182,7 @@ contract UAIRegistryTest is Test {
         vm.prank(nobody);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IUAIRegistry.AgentNotRegistered.selector, expectedId
+                AgentNotRegistered.selector, expectedId
             )
         );
         registry.setAgentURI("ipfs://test");
@@ -198,7 +215,7 @@ contract UAIRegistryTest is Test {
         vm.startPrank(ueaUser);
         registry.register(AGENT_URI, CARD_HASH);
 
-        vm.expectRevert(IUAIRegistry.AgentCardHashRequired.selector);
+        vm.expectRevert(AgentCardHashRequired.selector);
         registry.setAgentCardHash(bytes32(0));
         vm.stopPrank();
     }
@@ -227,7 +244,7 @@ contract UAIRegistryTest is Test {
 
     function test_OwnerOf_UnregisteredAgent_Reverts() public {
         vm.expectRevert(
-            abi.encodeWithSelector(IUAIRegistry.AgentNotRegistered.selector, 999)
+            abi.encodeWithSelector(AgentNotRegistered.selector, 999)
         );
         registry.ownerOf(999);
     }
@@ -289,27 +306,27 @@ contract UAIRegistryTest is Test {
     // ──────────────────────────────────────────────
 
     function test_TransferFrom_Reverts() public {
-        vm.expectRevert(IUAIRegistry.IdentityNotTransferable.selector);
+        vm.expectRevert(IdentityNotTransferable.selector);
         registry.transferFrom(ueaUser, admin, 1);
     }
 
     function test_SafeTransferFrom_Reverts() public {
-        vm.expectRevert(IUAIRegistry.IdentityNotTransferable.selector);
+        vm.expectRevert(IdentityNotTransferable.selector);
         registry.safeTransferFrom(ueaUser, admin, 1);
     }
 
     function test_SafeTransferFromWithData_Reverts() public {
-        vm.expectRevert(IUAIRegistry.IdentityNotTransferable.selector);
+        vm.expectRevert(IdentityNotTransferable.selector);
         registry.safeTransferFrom(ueaUser, admin, 1, "");
     }
 
     function test_Approve_Reverts() public {
-        vm.expectRevert(IUAIRegistry.IdentityNotTransferable.selector);
+        vm.expectRevert(IdentityNotTransferable.selector);
         registry.approve(admin, 1);
     }
 
     function test_SetApprovalForAll_Reverts() public {
-        vm.expectRevert(IUAIRegistry.IdentityNotTransferable.selector);
+        vm.expectRevert(IdentityNotTransferable.selector);
         registry.setApprovalForAll(admin, true);
     }
 
