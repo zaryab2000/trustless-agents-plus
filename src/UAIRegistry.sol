@@ -452,16 +452,28 @@ contract UAIRegistry is
         );
         bytes32 digest = _hashTypedDataV4(structHash);
 
+        UAIRegistryStorage storage s = _getStorage();
+        uint256 agentId = uint256(uint160(canonicalUEAAddr));
+        address expectedSigner = _ownerKeyToAddress(
+            s.records[agentId].ownerKey
+        );
+
         (address recovered, ECDSA.RecoverError err,) =
             ECDSA.tryRecover(digest, req.proofData);
 
-        if (err == ECDSA.RecoverError.NoError && recovered != address(0)) {
+        if (
+            err == ECDSA.RecoverError.NoError
+                && recovered == expectedSigner
+        ) {
             return true;
         }
 
         if (req.proofData.length >= 20) {
             address signer = _extractSignerAddress(req.proofData);
-            if (signer.code.length > 0) {
+            if (
+                signer == expectedSigner
+                    && signer.code.length > 0
+            ) {
                 try IERC1271(signer).isValidSignature{gas: 50_000}(
                     digest,
                     req.proofData[20:]
@@ -474,6 +486,13 @@ contract UAIRegistry is
         }
 
         return false;
+    }
+
+    function _ownerKeyToAddress(
+        bytes storage ownerKey
+    ) private view returns (address) {
+        if (ownerKey.length < 20) return address(0);
+        return address(bytes20(ownerKey));
     }
 
     function _extractSignerAddress(

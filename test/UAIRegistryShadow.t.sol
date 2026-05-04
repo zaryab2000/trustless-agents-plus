@@ -135,7 +135,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 42,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "1",
@@ -227,7 +227,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "8453",
@@ -247,7 +247,7 @@ contract UAIRegistryShadowTest is Test {
         vm.stopPrank();
     }
 
-    function test_LinkShadow_AnyValidSignature_Succeeds() public {
+    function test_LinkShadow_WrongSigner_Reverts() public {
         (, uint256 otherKey) = makeAddrAndKey("otherSigner");
 
         IUAIRegistry.ShadowLinkRequest memory req = IUAIRegistry.ShadowLinkRequest({
@@ -271,9 +271,8 @@ contract UAIRegistryShadowTest is Test {
         });
 
         vm.prank(ueaUser);
+        vm.expectRevert(IUAIRegistry.InvalidShadowSignature.selector);
         registry.linkShadow(req);
-
-        assertTrue(registry.getShadows(uint256(uint160(ueaUser))).length == 1);
     }
 
     function test_LinkShadow_GarbageSignature_Reverts() public {
@@ -333,7 +332,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 42,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "1",
@@ -424,7 +423,7 @@ contract UAIRegistryShadowTest is Test {
                 shadowAgentId: i,
                 proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
                 proofData: _signShadowLinkProper(
-                    shadowOwnerKey,
+                    ueaUserKey,
                     ueaUser,
                     "eip155",
                     chainId,
@@ -446,7 +445,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 999,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "999",
@@ -479,7 +478,7 @@ contract UAIRegistryShadowTest is Test {
                 shadowAgentId: i,
                 proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
                 proofData: _signShadowLinkProper(
-                    shadowOwnerKey,
+                    ueaUserKey,
                     ueaUser,
                     "eip155",
                     chainId,
@@ -524,7 +523,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "8453",
@@ -545,7 +544,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 8,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "42161",
@@ -674,7 +673,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 42,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey,
+                ueaUserKey,
                 ueaUser,
                 "eip155",
                 "1",
@@ -708,7 +707,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey, ueaUser, "eip155", "8453",
+                ueaUserKey, ueaUser, "eip155", "8453",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), 17, 2,
                 block.timestamp + 1 hours
             ),
@@ -724,7 +723,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 8,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey, ueaUser, "eip155", "42161",
+                ueaUserKey, ueaUser, "eip155", "42161",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), 8, 3,
                 block.timestamp + 1 hours
             ),
@@ -860,7 +859,7 @@ contract UAIRegistryShadowTest is Test {
             shadowAgentId: 17,
             proofType: IUAIRegistry.ShadowProofType.OWNER_KEY_SIGNED,
             proofData: _signShadowLinkProper(
-                shadowOwnerKey, ueaUser, "eip155", "8453",
+                ueaUserKey, ueaUser, "eip155", "8453",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), 17, 2,
                 block.timestamp + 1 hours
             ),
