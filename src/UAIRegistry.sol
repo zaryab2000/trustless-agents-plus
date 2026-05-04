@@ -21,6 +21,20 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IUEAFactory} from "./interfaces/IUEAFactory.sol";
 import {UniversalAccountId} from "./interfaces/Types.sol";
 import {IUAIRegistry} from "./IUAIRegistry.sol";
+import {
+    AgentNotRegistered,
+    AgentCardHashRequired,
+    UnsupportedProofType,
+    ShadowAlreadyClaimed,
+    ShadowNotFound,
+    ShadowLinkExpired,
+    ShadowLinkNonceUsed,
+    InvalidShadowSignature,
+    InvalidChainIdentifier,
+    InvalidRegistryAddress,
+    IdentityNotTransferable,
+    MaxShadowsExceeded
+} from "./Errors.sol";
 
 /// @title UAIRegistry
 /// @notice ERC-8004-compatible Universal Agent Identity Registry on Push Chain.
@@ -91,6 +105,7 @@ contract UAIRegistry is
     //  Registration
     // ──────────────────────────────────────────────
 
+    /// @inheritdoc IUAIRegistry
     function register(
         string calldata _agentURI,
         bytes32 agentCardHash
@@ -104,6 +119,8 @@ contract UAIRegistry is
         if (record.registered) {
             record.agentURI = _agentURI;
             record.agentCardHash = agentCardHash;
+            emit AgentURIUpdated(agentId, _agentURI);
+            emit AgentCardHashUpdated(agentId, agentCardHash);
         } else {
             (UniversalAccountId memory origin, bool isUEA) =
                 ueaFactory.getOriginForUEA(msg.sender);
@@ -129,6 +146,7 @@ contract UAIRegistry is
         }
     }
 
+    /// @inheritdoc IUAIRegistry
     function setAgentURI(
         string calldata newAgentURI
     ) external whenNotPaused {
@@ -141,6 +159,7 @@ contract UAIRegistry is
         emit AgentURIUpdated(agentId, newAgentURI);
     }
 
+    /// @inheritdoc IUAIRegistry
     function setAgentCardHash(bytes32 newHash) external whenNotPaused {
         if (newHash == bytes32(0)) revert AgentCardHashRequired();
         uint256 agentId = uint256(uint160(msg.sender));
@@ -156,6 +175,7 @@ contract UAIRegistry is
     //  Shadow Linking
     // ──────────────────────────────────────────────
 
+    /// @inheritdoc IUAIRegistry
     function linkShadow(
         ShadowLinkRequest calldata req
     ) external whenNotPaused {
@@ -237,6 +257,7 @@ contract UAIRegistry is
         );
     }
 
+    /// @inheritdoc IUAIRegistry
     function unlinkShadow(
         string calldata chainNamespace,
         string calldata chainId,
@@ -295,6 +316,7 @@ contract UAIRegistry is
     //  Reads — ERC-8004-shaped
     // ──────────────────────────────────────────────
 
+    /// @inheritdoc IUAIRegistry
     function ownerOf(uint256 agentId) external view returns (address) {
         if (!_getStorage().records[agentId].registered) {
             revert AgentNotRegistered(agentId);
@@ -302,6 +324,7 @@ contract UAIRegistry is
         return address(uint160(agentId));
     }
 
+    /// @inheritdoc IUAIRegistry
     function tokenURI(
         uint256 agentId
     ) external view returns (string memory) {
@@ -312,6 +335,7 @@ contract UAIRegistry is
         return s.records[agentId].agentURI;
     }
 
+    /// @inheritdoc IUAIRegistry
     function agentURI(
         uint256 agentId
     ) external view returns (string memory) {
@@ -326,6 +350,7 @@ contract UAIRegistry is
     //  Reads — UAIRegistry-specific
     // ──────────────────────────────────────────────
 
+    /// @inheritdoc IUAIRegistry
     function canonicalUEA(uint256 agentId) external view returns (address) {
         if (!_getStorage().records[agentId].registered) {
             revert AgentNotRegistered(agentId);
@@ -333,18 +358,21 @@ contract UAIRegistry is
         return address(uint160(agentId));
     }
 
+    /// @inheritdoc IUAIRegistry
     function agentIdOfUEA(address uea) external view returns (uint256) {
         uint256 agentId = uint256(uint160(uea));
         if (!_getStorage().records[agentId].registered) return 0;
         return agentId;
     }
 
+    /// @inheritdoc IUAIRegistry
     function getShadows(
         uint256 agentId
     ) external view returns (ShadowEntry[] memory) {
         return _getStorage().shadows[agentId];
     }
 
+    /// @inheritdoc IUAIRegistry
     function canonicalUEAFromShadow(
         string calldata chainNamespace,
         string calldata chainId,
@@ -365,10 +393,12 @@ contract UAIRegistry is
         return (address(uint160(agentId)), s.shadows[agentId][idx].verified);
     }
 
+    /// @inheritdoc IUAIRegistry
     function isRegistered(uint256 agentId) external view returns (bool) {
         return _getStorage().records[agentId].registered;
     }
 
+    /// @inheritdoc IUAIRegistry
     function getAgentRecord(
         uint256 agentId
     ) external view returns (AgentRecord memory) {
@@ -379,14 +409,17 @@ contract UAIRegistry is
     //  ERC-721 transfer surface — all revert
     // ──────────────────────────────────────────────
 
+    /// @inheritdoc IUAIRegistry
     function transferFrom(address, address, uint256) external pure {
         revert IdentityNotTransferable();
     }
 
+    /// @inheritdoc IUAIRegistry
     function safeTransferFrom(address, address, uint256) external pure {
         revert IdentityNotTransferable();
     }
 
+    /// @inheritdoc IUAIRegistry
     function safeTransferFrom(
         address,
         address,
@@ -396,10 +429,12 @@ contract UAIRegistry is
         revert IdentityNotTransferable();
     }
 
+    /// @inheritdoc IUAIRegistry
     function approve(address, uint256) external pure {
         revert IdentityNotTransferable();
     }
 
+    /// @inheritdoc IUAIRegistry
     function setApprovalForAll(address, bool) external pure {
         revert IdentityNotTransferable();
     }
