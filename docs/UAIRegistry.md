@@ -134,6 +134,24 @@ The storage struct contains:
 
 ---
 
+## Novel Features (Beyond ERC-8004)
+
+ERC-8004 defines per-chain identity registries with transferable ERC-721 tokens and no cross-chain awareness. UAIRegistry introduces several features that do not exist in the base specification.
+
+### Soulbound Identity Tokens
+
+ERC-8004 issues transferable ERC-721 tokens for agent identity. UAIRegistry overrides the entire ERC-721 transfer surface (`transferFrom`, `safeTransferFrom`, `approve`, `setApprovalForAll`) to revert unconditionally with `IdentityNotTransferable()`. Agent identity is permanently bound to the UEA that created it — it cannot be sold, delegated, or transferred to another entity. This guarantees that the `agentId ↔ UEA` relationship is immutable after registration.
+
+### Shadow Linking with EIP-712 Cryptographic Proof
+
+ERC-8004 has no concept of cross-chain identity binding. UAIRegistry introduces `linkShadow`, where the UEA owner signs an EIP-712 typed data message proving they control the same identity on another chain's ERC-8004 registry. The signature binds the canonical UEA, target chain namespace, chain ID, registry address, shadow agent ID, nonce, and deadline into a single verifiable proof. Both EOA signatures (ECDSA recovery) and smart wallet signatures (ERC-1271 `isValidSignature`) are supported, so agents controlled by multisigs or account-abstraction wallets can link shadows without workarounds.
+
+### Global Shadow Deduplication
+
+A shadow identity tuple `(chainNamespace, chainId, registryAddress, shadowAgentId)` can only be linked to one canonical UEA at a time. If agent A links to shadow ID 42 on Ethereum's registry, agent B cannot claim the same shadow — the transaction reverts with `ShadowAlreadyClaimed`. When agent A unlinks, the dedup key is freed and another agent may claim it. This enforces a strict one-to-one binding between per-chain identities and canonical identities, preventing impersonation where two canonical agents claim to be the same per-chain entity.
+
+---
+
 ## How UAIRegistry Works with ERC-8004
 
 ERC-8004 defines the per-chain standard for agent identity and reputation. Each chain deploys its own `IdentityRegistry` (and optionally `ReputationRegistryUpgradeable`). Agents register on each chain independently through these per-chain contracts.

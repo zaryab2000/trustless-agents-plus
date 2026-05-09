@@ -59,6 +59,36 @@ The flow:
 
 ---
 
+## Novel Features (Beyond ERC-8004)
+
+ERC-8004 defines per-chain reputation storage and explicitly states that "more complex reputation aggregation will happen off-chain." ReputationRegistry moves that aggregation on-chain and introduces several features that do not exist in the base specification.
+
+### Reputation Score Formula (0-10,000 bps)
+
+ERC-8004 stores raw weighted averages per chain with no composite score. ReputationRegistry computes a single, normalized score from 0 to 10,000 basis points using a multi-factor formula that combines quality, volume, diversity, and slashing into one number. This gives consumers a single value to gate access decisions without interpreting raw data.
+
+### Diversity Bonus
+
+Agents that operate across multiple chains receive a bonus of 500 bps per chain (capped at 2,000 bps for 4+ chains). This incentivizes genuine cross-chain participation and makes it harder for an agent to farm a high score on a single low-activity chain. No equivalent exists in ERC-8004.
+
+### Volume Multiplier (log2-scaled)
+
+The score scales the base quality rating by `log2(totalFeedbackCount)`, ranging from 0.5x (1 feedback) to 1.0x (1,024+ feedbacks). This penalizes agents with thin track records — a perfect rating from 2 feedbacks produces a lower score than a good rating from thousands. ERC-8004 treats all feedback counts equally.
+
+### Cross-Chain Slashing with Persistent Penalties
+
+ERC-8004 has no slashing mechanism. ReputationRegistry introduces `SLASHER_ROLE` with cumulative severity deductions that persist even if the associated shadow link is later removed. An agent cannot escape a slash by unlinking from the chain where the incident occurred. Up to 256 slash records are stored per agent with full provenance (chain, reason, evidence hash, timestamp, slasher address).
+
+### Staleness Protection
+
+Each per-chain submission includes a `sourceBlockNumber` that must be strictly greater than the previously stored value for that agent+chain combination. This prevents replay attacks and guarantees monotonic data freshness. ERC-8004 has no equivalent ordering constraint on reputation updates.
+
+### Positive/Negative Sentiment Tracking
+
+ReputationRegistry tracks `positiveCount` and `negativeCount` alongside the `summaryValue`. While these do not factor into the score formula, they provide consumers with sentiment breakdown that ERC-8004's single weighted average does not expose.
+
+---
+
 ## Detailed Mechanics
 
 ### Roles

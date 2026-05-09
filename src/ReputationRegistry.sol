@@ -410,8 +410,9 @@ contract ReputationRegistry is
         if (sub.valueDecimals > MAX_DECIMALS) {
             revert InvalidDecimals(sub.valueDecimals);
         }
-        int128 maxAbsolute =
-            int128(int256(100 * int256(10 ** uint256(sub.valueDecimals))));
+        int128 maxAbsolute = SafeCast.toInt128(
+            int256(100) * int256(10 ** uint256(sub.valueDecimals))
+        );
         if (
             sub.summaryValue > maxAbsolute
                 || sub.summaryValue < -maxAbsolute
