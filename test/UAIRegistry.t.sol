@@ -30,17 +30,13 @@ contract UAIRegistryTest is Test {
         factory.addUEA(
             ueaUser,
             UniversalAccountId({
-                chainNamespace: "eip155",
-                chainId: "1",
-                owner: abi.encodePacked(ueaUser)
+                chainNamespace: "eip155", chainId: "1", owner: abi.encodePacked(ueaUser)
             })
         );
 
         UAIRegistry impl = new UAIRegistry(factory);
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(impl),
-            admin,
-            abi.encodeCall(UAIRegistry.initialize, (admin, pauser))
+            address(impl), admin, abi.encodeCall(UAIRegistry.initialize, (admin, pauser))
         );
         registry = UAIRegistry(address(proxy));
     }
@@ -68,13 +64,7 @@ contract UAIRegistryTest is Test {
 
         vm.expectEmit(true, true, false, true);
         emit IUAIRegistry.Registered(
-            expectedId,
-            ueaUser,
-            "eip155",
-            "1",
-            abi.encodePacked(ueaUser),
-            AGENT_URI,
-            CARD_HASH
+            expectedId, ueaUser, "eip155", "1", abi.encodePacked(ueaUser), AGENT_URI, CARD_HASH
         );
 
         vm.prank(ueaUser);
@@ -180,11 +170,7 @@ contract UAIRegistryTest is Test {
         uint256 expectedId = uint256(uint160(nobody));
 
         vm.prank(nobody);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                AgentNotRegistered.selector, expectedId
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, expectedId));
         registry.setAgentURI("ipfs://test");
     }
 
@@ -243,9 +229,7 @@ contract UAIRegistryTest is Test {
     }
 
     function test_OwnerOf_UnregisteredAgent_Reverts() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(AgentNotRegistered.selector, 999)
-        );
+        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, 999));
         registry.ownerOf(999);
     }
 
@@ -328,6 +312,36 @@ contract UAIRegistryTest is Test {
     function test_SetApprovalForAll_Reverts() public {
         vm.expectRevert(IdentityNotTransferable.selector);
         registry.setApprovalForAll(admin, true);
+    }
+
+    // ──────────────────────────────────────────────
+    //  Branch Coverage — Unregistered Agent Reads
+    // ──────────────────────────────────────────────
+
+    function test_SetAgentCardHash_NotRegistered_Reverts() public {
+        address unregistered = makeAddr("unregistered");
+        uint256 fakeId = uint256(uint160(unregistered));
+        vm.prank(unregistered);
+        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        registry.setAgentCardHash(keccak256("card"));
+    }
+
+    function test_TokenURI_NotRegistered_Reverts() public {
+        uint256 fakeId = 12_345;
+        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        registry.tokenURI(fakeId);
+    }
+
+    function test_AgentURI_NotRegistered_Reverts() public {
+        uint256 fakeId = 12_345;
+        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        registry.agentURI(fakeId);
+    }
+
+    function test_CanonicalUEA_NotRegistered_Reverts() public {
+        uint256 fakeId = 12_345;
+        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        registry.canonicalUEA(fakeId);
     }
 
     // ──────────────────────────────────────────────

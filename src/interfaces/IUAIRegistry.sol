@@ -105,10 +105,7 @@ interface IUAIRegistry {
 
     /// @notice Emitted when a shadow identity is unlinked from a canonical agent.
     event ShadowUnlinked(
-        uint256 indexed agentId,
-        string chainNamespace,
-        string chainId,
-        address registryAddress
+        uint256 indexed agentId, string chainNamespace, string chainId, address registryAddress
     );
 
     // ──────────────────────────────────────────────
@@ -128,11 +125,15 @@ interface IUAIRegistry {
 
     /// @notice Update the metadata URI for the caller's agent.
     /// @param newAgentURI New metadata URI.
-    function setAgentURI(string calldata newAgentURI) external;
+    function setAgentURI(
+        string calldata newAgentURI
+    ) external;
 
     /// @notice Update the agent card hash for the caller's agent.
     /// @param newHash New keccak-256 hash of the agent card content.
-    function setAgentCardHash(bytes32 newHash) external;
+    function setAgentCardHash(
+        bytes32 newHash
+    ) external;
 
     // ──────────────────────────────────────────────
     //  Shadow Linking
@@ -144,7 +145,9 @@ interface IUAIRegistry {
     ///      unlinking the first. This constraint exists because the reverse-lookup index
     ///      keys on the chain+registry tuple without the shadowAgentId.
     /// @param req Shadow link request containing chain identifiers, proof, nonce, and deadline.
-    function linkShadow(ShadowLinkRequest calldata req) external;
+    function linkShadow(
+        ShadowLinkRequest calldata req
+    ) external;
 
     /// @notice Remove a shadow link from the caller's canonical agent.
     /// @param chainNamespace CAIP-2 namespace of the shadow chain (e.g. "eip155").
@@ -163,17 +166,23 @@ interface IUAIRegistry {
     /// @notice Return the owner (UEA address) of a registered agent.
     /// @param agentId The agent identifier.
     /// @return The UEA address that owns this agent identity.
-    function ownerOf(uint256 agentId) external view returns (address);
+    function ownerOf(
+        uint256 agentId
+    ) external view returns (address);
 
     /// @notice Return the metadata URI for a registered agent (ERC-721 compatible).
     /// @param agentId The agent identifier.
     /// @return The agent's metadata URI string.
-    function tokenURI(uint256 agentId) external view returns (string memory);
+    function tokenURI(
+        uint256 agentId
+    ) external view returns (string memory);
 
     /// @notice Return the agent card URI (ERC-8004 alias for tokenURI).
     /// @param agentId The agent identifier.
     /// @return The agent's metadata URI string.
-    function agentURI(uint256 agentId) external view returns (string memory);
+    function agentURI(
+        uint256 agentId
+    ) external view returns (string memory);
 
     // ──────────────────────────────────────────────
     //  Reads — UAIRegistry-specific
@@ -182,12 +191,16 @@ interface IUAIRegistry {
     /// @notice Return the canonical UEA address for an agent ID.
     /// @param agentId The agent identifier.
     /// @return The UEA address (identical to `address(uint160(agentId))`).
-    function canonicalUEA(uint256 agentId) external view returns (address);
+    function canonicalUEA(
+        uint256 agentId
+    ) external view returns (address);
 
     /// @notice Return the agent ID for a UEA address, or 0 if unregistered.
     /// @param uea The UEA address to look up.
     /// @return The agent ID, or 0 if no agent is registered at this address.
-    function agentIdOfUEA(address uea) external view returns (uint256);
+    function agentIdOfUEA(
+        address uea
+    ) external view returns (uint256);
 
     /// @notice Return all shadow entries linked to an agent.
     /// @param agentId The agent identifier.
@@ -213,7 +226,9 @@ interface IUAIRegistry {
     /// @notice Check whether an agent ID is registered.
     /// @param agentId The agent identifier.
     /// @return True if the agent is registered.
-    function isRegistered(uint256 agentId) external view returns (bool);
+    function isRegistered(
+        uint256 agentId
+    ) external view returns (bool);
 
     /// @notice Return the full on-chain record for an agent.
     /// @param agentId The agent identifier.
@@ -227,7 +242,11 @@ interface IUAIRegistry {
     // ──────────────────────────────────────────────
 
     /// @notice Always reverts — agent identities are soulbound.
-    function transferFrom(address from, address to, uint256 tokenId) external;
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /// @notice Always reverts — agent identities are soulbound.
     function safeTransferFrom(
@@ -245,8 +264,14 @@ interface IUAIRegistry {
     ) external;
 
     /// @notice Always reverts — agent identities are soulbound.
-    function approve(address spender, uint256 tokenId) external;
+    function approve(
+        address spender,
+        uint256 tokenId
+    ) external;
 
     /// @notice Always reverts — agent identities are soulbound.
-    function setApprovalForAll(address operator, bool approved) external;
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) external;
 }

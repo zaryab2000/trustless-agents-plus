@@ -15,20 +15,13 @@ error UnsupportedProofType();
 /// @param registryAddress ERC-8004 registry on the shadow chain.
 /// @param shadowAgentId Agent ID on the shadow chain registry.
 error ShadowAlreadyClaimed(
-    string chainNamespace,
-    string chainId,
-    address registryAddress,
-    uint256 shadowAgentId
+    string chainNamespace, string chainId, address registryAddress, uint256 shadowAgentId
 );
 
 /// @param chainNamespace CAIP-2 namespace of the missing shadow.
 /// @param chainId CAIP-2 chain ID of the missing shadow.
 /// @param registryAddress ERC-8004 registry on the shadow chain.
-error ShadowNotFound(
-    string chainNamespace,
-    string chainId,
-    address registryAddress
-);
+error ShadowNotFound(string chainNamespace, string chainId, address registryAddress);
 
 /// @param deadline The expired deadline timestamp.
 error ShadowLinkExpired(uint256 deadline);

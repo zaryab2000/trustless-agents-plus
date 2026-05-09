@@ -20,9 +20,7 @@ contract Deploy is Script {
         console.log("Implementation:", address(impl));
 
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(impl),
-            deployer,
-            abi.encodeCall(UAIRegistry.initialize, (deployer, deployer))
+            address(impl), deployer, abi.encodeCall(UAIRegistry.initialize, (deployer, deployer))
         );
         console.log("Proxy:", address(proxy));
 

@@ -14,7 +14,7 @@ contract UAIRegistryIntegrationTest is Test {
     UAIRegistry public registry;
 
     address constant UEA_FACTORY = 0x00000000000000000000000000000000000000eA;
-    uint256 constant PUSH_CHAIN_ID = 42101;
+    uint256 constant PUSH_CHAIN_ID = 42_101;
 
     address public admin;
     uint256 public adminKey;
@@ -36,9 +36,7 @@ contract UAIRegistryIntegrationTest is Test {
 
         UAIRegistry impl = new UAIRegistry(IUEAFactory(UEA_FACTORY));
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(impl),
-            admin,
-            abi.encodeCall(UAIRegistry.initialize, (admin, admin))
+            address(impl), admin, abi.encodeCall(UAIRegistry.initialize, (admin, admin))
         );
         registry = UAIRegistry(address(proxy));
     }
@@ -49,8 +47,7 @@ contract UAIRegistryIntegrationTest is Test {
             string memory name,
             string memory version,
             uint256 chainId,
-            address verifyingContract,
-            ,
+            address verifyingContract,,
         ) = registry.eip712Domain();
 
         return keccak256(
@@ -67,16 +64,10 @@ contract UAIRegistryIntegrationTest is Test {
         );
     }
 
-    function test_Integration_RegisterWithRealUEAFactory()
-        public
-        onlyPushChain
-    {
+    function test_Integration_RegisterWithRealUEAFactory() public onlyPushChain {
         address caller = makeAddr("integrationCaller");
         vm.prank(caller);
-        uint256 agentId = registry.register(
-            "ipfs://QmIntegration",
-            keccak256("integration-card")
-        );
+        uint256 agentId = registry.register("ipfs://QmIntegration", keccak256("integration-card"));
 
         assertEq(agentId, uint256(uint160(caller)));
 
@@ -85,21 +76,14 @@ contract UAIRegistryIntegrationTest is Test {
         assertTrue(bytes(rec.originChainNamespace).length > 0);
     }
 
-    function test_Integration_LinkShadow_EthereumRegistry()
-        public
-        onlyPushChain
-    {
+    function test_Integration_LinkShadow_EthereumRegistry() public onlyPushChain {
         address caller = makeAddr("integrationLinker");
         (, uint256 signerKey) = makeAddrAndKey("integrationSigner");
 
         vm.prank(caller);
-        registry.register(
-            "ipfs://QmIntegrationLink",
-            keccak256("integration-link-card")
-        );
+        registry.register("ipfs://QmIntegrationLink", keccak256("integration-link-card"));
 
-        address ethRegistry =
-            address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432);
+        address ethRegistry = address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432);
 
         bytes32 structHash = keccak256(
             abi.encode(
@@ -113,9 +97,7 @@ contract UAIRegistryIntegrationTest is Test {
                 block.timestamp + 1 hours
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, digest);
 
         vm.prank(caller);
@@ -132,9 +114,8 @@ contract UAIRegistryIntegrationTest is Test {
             })
         );
 
-        (address canonical, bool verified) = registry.canonicalUEAFromShadow(
-            "eip155", "1", ethRegistry, 42
-        );
+        (address canonical, bool verified) =
+            registry.canonicalUEAFromShadow("eip155", "1", ethRegistry, 42);
         assertEq(canonical, caller);
         assertTrue(verified);
     }
@@ -144,10 +125,7 @@ contract UAIRegistryIntegrationTest is Test {
         (, uint256 signerKey) = makeAddrAndKey("integrationFullSigner");
 
         vm.prank(caller);
-        registry.register(
-            "ipfs://QmFullFlow",
-            keccak256("full-flow-card")
-        );
+        registry.register("ipfs://QmFullFlow", keccak256("full-flow-card"));
 
         address reg = address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432);
 
@@ -168,11 +146,8 @@ contract UAIRegistryIntegrationTest is Test {
                     block.timestamp + 1 hours
                 )
             );
-            bytes32 digest = keccak256(
-                abi.encodePacked(
-                    "\x19\x01", _getDomainSeparator(), structHash
-                )
-            );
+            bytes32 digest =
+                keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, digest);
 
             registry.linkShadow(
@@ -189,8 +164,7 @@ contract UAIRegistryIntegrationTest is Test {
             );
         }
 
-        IUAIRegistry.ShadowEntry[] memory shadows =
-            registry.getShadows(uint256(uint160(caller)));
+        IUAIRegistry.ShadowEntry[] memory shadows = registry.getShadows(uint256(uint160(caller)));
         assertEq(shadows.length, 3);
 
         registry.unlinkShadow("eip155", "8453", reg);
@@ -198,14 +172,10 @@ contract UAIRegistryIntegrationTest is Test {
         shadows = registry.getShadows(uint256(uint160(caller)));
         assertEq(shadows.length, 2);
 
-        (address canonical,) = registry.canonicalUEAFromShadow(
-            "eip155", "8453", reg, 17
-        );
+        (address canonical,) = registry.canonicalUEAFromShadow("eip155", "8453", reg, 17);
         assertEq(canonical, address(0));
 
-        (canonical,) = registry.canonicalUEAFromShadow(
-            "eip155", "1", reg, 42
-        );
+        (canonical,) = registry.canonicalUEAFromShadow("eip155", "1", reg, 42);
         assertEq(canonical, caller);
 
         vm.stopPrank();
