@@ -29,11 +29,7 @@ error InvalidRegistryAddressReputation();
 /// @param agentId The agent ID.
 /// @param chainNamespace CAIP-2 namespace of the unlinked chain.
 /// @param chainId CAIP-2 chain ID of the unlinked chain.
-error ShadowNotLinked(
-    uint256 agentId,
-    string chainNamespace,
-    string chainId
-);
+error ShadowNotLinked(uint256 agentId, string chainNamespace, string chainId);
 
 /// @param size The submitted batch size.
 /// @param max The maximum allowed batch size.

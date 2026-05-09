@@ -19,7 +19,9 @@ contract MockIdentityRegistry {
         emit Registered(agentId, agentURI, msg.sender);
     }
 
-    function ownerOf(uint256 agentId) external view returns (address) {
+    function ownerOf(
+        uint256 agentId
+    ) external view returns (address) {
         address owner = _owners[agentId];
         require(owner != address(0), "ERC721NonexistentToken");
         return owner;

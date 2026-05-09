@@ -29,9 +29,7 @@ contract UAIRegistryFuzz is Test {
         factory = new MockUEAFactory();
         UAIRegistry impl = new UAIRegistry(factory);
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(impl),
-            admin,
-            abi.encodeCall(UAIRegistry.initialize, (admin, pauser))
+            address(impl), admin, abi.encodeCall(UAIRegistry.initialize, (admin, pauser))
         );
         registry = UAIRegistry(address(proxy));
     }
@@ -42,8 +40,7 @@ contract UAIRegistryFuzz is Test {
             string memory name,
             string memory version,
             uint256 chainId,
-            address verifyingContract,
-            ,
+            address verifyingContract,,
         ) = registry.eip712Domain();
 
         return keccak256(
@@ -71,7 +68,9 @@ contract UAIRegistryFuzz is Test {
         assertEq(agentId, uint256(uint160(caller)));
     }
 
-    function testFuzz_OwnerOf_AlwaysMatchesAgentId(address caller) public {
+    function testFuzz_OwnerOf_AlwaysMatchesAgentId(
+        address caller
+    ) public {
         vm.assume(caller != address(0));
         vm.assume(caller != admin);
 
@@ -105,9 +104,7 @@ contract UAIRegistryFuzz is Test {
                 block.timestamp + 1 hours
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongKey, digest);
 
         IUAIRegistry.ShadowLinkRequest memory req = IUAIRegistry.ShadowLinkRequest({
@@ -150,9 +147,7 @@ contract UAIRegistryFuzz is Test {
                 block.timestamp + 1 hours
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(callerKey, digest);
 
         IUAIRegistry.ShadowLinkRequest memory req = IUAIRegistry.ShadowLinkRequest({
@@ -181,9 +176,7 @@ contract UAIRegistryFuzz is Test {
                 block.timestamp + 1 hours
             )
         );
-        digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         (v, r, s) = vm.sign(callerKey, digest);
 
         IUAIRegistry.ShadowLinkRequest memory req2 = IUAIRegistry.ShadowLinkRequest({
@@ -223,9 +216,7 @@ contract UAIRegistryFuzz is Test {
                 block.timestamp + 1 hours
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(callerKey, digest);
 
         vm.startPrank(caller);
@@ -242,11 +233,7 @@ contract UAIRegistryFuzz is Test {
             })
         );
 
-        registry.unlinkShadow(
-            "eip155",
-            "1",
-            address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432)
-        );
+        registry.unlinkShadow("eip155", "1", address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432));
 
         structHash = keccak256(
             abi.encode(
@@ -260,9 +247,7 @@ contract UAIRegistryFuzz is Test {
                 block.timestamp + 1 hours
             )
         );
-        digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         (v, r, s) = vm.sign(callerKey, digest);
 
         registry.linkShadow(
@@ -280,10 +265,7 @@ contract UAIRegistryFuzz is Test {
         vm.stopPrank();
 
         (address canonical,) = registry.canonicalUEAFromShadow(
-            "eip155",
-            "1",
-            address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
-            shadowAgentId
+            "eip155", "1", address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), shadowAgentId
         );
         assertEq(canonical, caller);
     }
@@ -309,9 +291,7 @@ contract UAIRegistryFuzz is Test {
                 block.timestamp + 1 hours
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(callerKey, digest);
 
         vm.startPrank(caller);
@@ -329,26 +309,16 @@ contract UAIRegistryFuzz is Test {
         );
 
         (address canonical, bool verified) = registry.canonicalUEAFromShadow(
-            "eip155",
-            "1",
-            address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
-            shadowAgentId
+            "eip155", "1", address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), shadowAgentId
         );
         assertEq(canonical, caller);
         assertTrue(verified);
 
-        registry.unlinkShadow(
-            "eip155",
-            "1",
-            address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432)
-        );
+        registry.unlinkShadow("eip155", "1", address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432));
         vm.stopPrank();
 
         (canonical, verified) = registry.canonicalUEAFromShadow(
-            "eip155",
-            "1",
-            address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
-            shadowAgentId
+            "eip155", "1", address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432), shadowAgentId
         );
         assertEq(canonical, address(0));
         assertFalse(verified);

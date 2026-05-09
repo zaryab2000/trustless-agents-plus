@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {OwnableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-import {Initializable} from
-    "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {UUPSUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {
+    OwnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {
+    PausableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IGatewayAdapter} from "./IGatewayAdapter.sol";
 import {
     InvalidGatewayAdapter,
@@ -35,11 +35,7 @@ interface IReputationRegistryLocal {
         address[] calldata clientAddresses,
         string calldata tag1,
         string calldata tag2
-    ) external view returns (
-        uint64 count,
-        int128 summaryValue,
-        uint8 summaryValueDecimals
-    );
+    ) external view returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals);
 
     function getClients(
         uint256 agentId
@@ -103,11 +99,7 @@ contract ReputationRegistryPlus is
     bytes32 private constant STORAGE_SLOT =
         0x8e824f5048072b506e2d9dcadff6763714e8852b22ea17454bb654e73fc5be00;
 
-    function _getStorage()
-        private
-        pure
-        returns (ReputationPlusStorage storage s)
-    {
+    function _getStorage() private pure returns (ReputationPlusStorage storage s) {
         bytes32 slot = STORAGE_SLOT;
         assembly {
             s.slot := slot
@@ -175,9 +167,7 @@ contract ReputationRegistryPlus is
         bytes32 feedbackHash
     ) external payable whenNotPaused {
         _localFeedback(
-            agentId, value, valueDecimals,
-            tag1, tag2, endpoint,
-            feedbackURI, feedbackHash
+            agentId, value, valueDecimals, tag1, tag2, endpoint, feedbackURI, feedbackHash
         );
         _maybePropagate(agentId);
     }
@@ -194,23 +184,21 @@ contract ReputationRegistryPlus is
     ) internal {
         IReputationRegistryLocal(_getStorage().localRegistry)
             .giveFeedback(
-                agentId, value, valueDecimals,
-                tag1, tag2, endpoint,
-                feedbackURI, feedbackHash
+                agentId, value, valueDecimals, tag1, tag2, endpoint, feedbackURI, feedbackHash
             );
     }
 
-    function _maybePropagate(uint256 agentId) internal {
+    function _maybePropagate(
+        uint256 agentId
+    ) internal {
         ReputationPlusStorage storage s = _getStorage();
         if (!s.propagationEnabled) return;
 
         s.pendingFeedbackCount[agentId]++;
 
-        bool shouldSend =
-            s.pendingFeedbackCount[agentId] >= s.batchThreshold
+        bool shouldSend = s.pendingFeedbackCount[agentId] >= s.batchThreshold
             || s.lastPropagated[agentId] == 0
-            || (block.timestamp - s.lastPropagated[agentId])
-                >= s.maxPropagationInterval;
+            || (block.timestamp - s.lastPropagated[agentId]) >= s.maxPropagationInterval;
 
         if (shouldSend && msg.value > 0) {
             _propagateReputation(agentId);
@@ -246,10 +234,7 @@ contract ReputationRegistryPlus is
         uint256[] calldata localAgentIds,
         uint256[] calldata canonicalIds
     ) external onlyOwner {
-        require(
-            localAgentIds.length == canonicalIds.length,
-            "length mismatch"
-        );
+        require(localAgentIds.length == canonicalIds.length, "length mismatch");
         ReputationPlusStorage storage s = _getStorage();
         for (uint256 i; i < localAgentIds.length; i++) {
             s.canonicalIds[localAgentIds[i]] = canonicalIds[i];
@@ -260,17 +245,16 @@ contract ReputationRegistryPlus is
     //  Internal
     // ──────────────────────────────────────────────
 
-    function _propagateReputation(uint256 agentId) internal {
+    function _propagateReputation(
+        uint256 agentId
+    ) internal {
         ReputationPlusStorage storage s = _getStorage();
 
         // Read current local summary (all clients, no tag filter)
-        address[] memory clients =
-            IReputationRegistryLocal(s.localRegistry)
-                .getClients(agentId);
+        address[] memory clients = IReputationRegistryLocal(s.localRegistry).getClients(agentId);
 
         (uint64 feedbackCount, int128 summaryValue, uint8 decimals) =
-            IReputationRegistryLocal(s.localRegistry)
-                .getSummary(agentId, clients, "", "");
+            IReputationRegistryLocal(s.localRegistry).getSummary(agentId, clients, "", "");
 
         uint256 cId = s.canonicalIds[agentId];
 
@@ -292,10 +276,7 @@ contract ReputationRegistryPlus is
             block.number
         );
 
-        bytes memory payload = abi.encode(
-            s.settlementRegistry,
-            submitCalldata
-        );
+        bytes memory payload = abi.encode(s.settlementRegistry, submitCalldata);
 
         IGatewayAdapter(s.gatewayAdapter).sendPayload{value: msg.value}(
             address(0), // recipient: credit to caller's UEA
@@ -307,17 +288,11 @@ contract ReputationRegistryPlus is
         s.pendingFeedbackCount[agentId] = 0;
         s.lastPropagated[agentId] = uint64(block.timestamp);
 
-        emit ReputationPropagated(
-            agentId, feedbackCount, summaryValue, block.number
-        );
+        emit ReputationPropagated(agentId, feedbackCount, summaryValue, block.number);
     }
 
     /// @dev Returns the chain ID as a string for CAIP-2 encoding.
-    function _chainIdString()
-        internal
-        view
-        returns (string memory)
-    {
+    function _chainIdString() internal view returns (string memory) {
         return _uint256ToString(block.chainid);
     }
 
@@ -385,21 +360,12 @@ contract ReputationRegistryPlus is
         return _getStorage().batchThreshold;
     }
 
-    function maxPropagationInterval()
-        external
-        view
-        returns (uint64)
-    {
+    function maxPropagationInterval() external view returns (uint64) {
         return _getStorage().maxPropagationInterval;
     }
 
-    function estimatePropagationFee()
-        external
-        view
-        returns (uint256)
-    {
-        return IGatewayAdapter(_getStorage().gatewayAdapter)
-            .estimateFee();
+    function estimatePropagationFee() external view returns (uint256) {
+        return IGatewayAdapter(_getStorage().gatewayAdapter).estimateFee();
     }
 
     // ──────────────────────────────────────────────
@@ -432,7 +398,9 @@ contract ReputationRegistryPlus is
         emit LocalRegistryUpdated(registry);
     }
 
-    function setPropagationEnabled(bool enabled) external onlyOwner {
+    function setPropagationEnabled(
+        bool enabled
+    ) external onlyOwner {
         _getStorage().propagationEnabled = enabled;
         emit PropagationToggled(enabled);
     }

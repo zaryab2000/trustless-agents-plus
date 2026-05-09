@@ -28,7 +28,9 @@ interface IUniversalGateway {
 contract PushGatewayAdapter is IGatewayAdapter {
     IUniversalGateway public immutable GATEWAY;
 
-    constructor(address gateway_) {
+    constructor(
+        address gateway_
+    ) {
         require(gateway_ != address(0), "zero gateway");
         GATEWAY = IUniversalGateway(gateway_);
     }

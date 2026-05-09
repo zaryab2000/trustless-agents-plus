@@ -26,8 +26,7 @@ contract ReputationRegistryFuzzTest is Test {
     uint256 public ueaUserKey;
     uint256 public agentId;
 
-    address constant SHADOW_REGISTRY =
-        address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432);
+    address constant SHADOW_REGISTRY = address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432);
 
     bytes32 public constant SHADOW_LINK_TYPEHASH = keccak256(
         "ShadowLink(address canonicalUEA,string chainNamespace,string chainId,"
@@ -40,31 +39,22 @@ contract ReputationRegistryFuzzTest is Test {
         factory.addUEA(
             ueaUser,
             UniversalAccountId({
-                chainNamespace: "eip155",
-                chainId: "1",
-                owner: abi.encodePacked(ueaUser)
+                chainNamespace: "eip155", chainId: "1", owner: abi.encodePacked(ueaUser)
             })
         );
 
         UAIRegistry uaiImpl = new UAIRegistry(factory);
-        TransparentUpgradeableProxy uaiProxy =
-            new TransparentUpgradeableProxy(
-                address(uaiImpl),
-                admin,
-                abi.encodeCall(UAIRegistry.initialize, (admin, pauser))
-            );
+        TransparentUpgradeableProxy uaiProxy = new TransparentUpgradeableProxy(
+            address(uaiImpl), admin, abi.encodeCall(UAIRegistry.initialize, (admin, pauser))
+        );
         uaiRegistry = UAIRegistry(address(uaiProxy));
 
         ReputationRegistry repImpl = new ReputationRegistry();
-        TransparentUpgradeableProxy repProxy =
-            new TransparentUpgradeableProxy(
-                address(repImpl),
-                admin,
-                abi.encodeCall(
-                    ReputationRegistry.initialize,
-                    (admin, pauser, address(uaiRegistry))
-                )
-            );
+        TransparentUpgradeableProxy repProxy = new TransparentUpgradeableProxy(
+            address(repImpl),
+            admin,
+            abi.encodeCall(ReputationRegistry.initialize, (admin, pauser, address(uaiRegistry)))
+        );
         repRegistry = ReputationRegistry(address(repProxy));
 
         vm.startPrank(admin);
@@ -95,7 +85,9 @@ contract ReputationRegistryFuzzTest is Test {
         );
     }
 
-    function _signDigest(bytes32 digest) internal view returns (bytes memory) {
+    function _signDigest(
+        bytes32 digest
+    ) internal view returns (bytes memory) {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ueaUserKey, digest);
         return abi.encodePacked(r, s, v);
     }
@@ -120,9 +112,7 @@ contract ReputationRegistryFuzzTest is Test {
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
         bytes memory sig = _signDigest(digest);
 
         vm.prank(ueaUser);
@@ -146,8 +136,7 @@ contract ReputationRegistryFuzzTest is Test {
         uint256 slashSeverity
     ) public {
         feedbackCount = uint64(bound(feedbackCount, 1, type(uint64).max));
-        summaryValue =
-            int128(bound(int256(summaryValue), -100 * 1e18, 100 * 1e18));
+        summaryValue = int128(bound(int256(summaryValue), -100 * 1e18, 100 * 1e18));
         slashSeverity = bound(slashSeverity, 0, 50_000);
 
         vm.prank(reporter);
@@ -172,14 +161,7 @@ contract ReputationRegistryFuzzTest is Test {
             uint256 chunk = slashSeverity - slashApplied;
             if (chunk > 10_000) chunk = 10_000;
             vm.prank(slasher);
-            repRegistry.slash(
-                agentId,
-                "eip155",
-                "1",
-                "test",
-                keccak256("e"),
-                chunk
-            );
+            repRegistry.slash(agentId, "eip155", "1", "test", keccak256("e"), chunk);
             slashApplied += chunk;
         }
 
@@ -194,8 +176,7 @@ contract ReputationRegistryFuzzTest is Test {
         count1 = uint64(bound(count1, 1, 1e9));
         count2 = uint64(bound(count2, 1, 1e9));
 
-        address shadowReg2 =
-            address(0x8004b269Fb4A3325136eB29FA0ceb6d2E539b543);
+        address shadowReg2 = address(0x8004b269Fb4A3325136eB29FA0ceb6d2E539b543);
         _linkShadow("eip155", "8453", shadowReg2, 17, 2);
 
         vm.startPrank(reporter);
@@ -233,10 +214,7 @@ contract ReputationRegistryFuzzTest is Test {
 
         IReputationRegistry.AggregatedReputation memory agg =
             repRegistry.getAggregatedReputation(agentId);
-        assertEq(
-            agg.totalFeedbackCount,
-            uint64(uint256(count1) + uint256(count2))
-        );
+        assertEq(agg.totalFeedbackCount, uint64(uint256(count1) + uint256(count2)));
     }
 
     function testFuzz_StaleProtection_Enforced(
@@ -306,21 +284,16 @@ contract ReputationRegistryFuzzTest is Test {
 
         for (uint256 i; i < slashCount; i++) {
             vm.prank(slasher);
-            repRegistry.slash(
-                agentId,
-                "eip155",
-                "1",
-                "test",
-                keccak256(abi.encode(i)),
-                5000
-            );
+            repRegistry.slash(agentId, "eip155", "1", "test", keccak256(abi.encode(i)), 5000);
         }
 
         uint256 score = repRegistry.getReputationScore(agentId);
         assertLe(score, 10_000);
     }
 
-    function testFuzz_Reaggregate_Idempotent(uint64 count) public {
+    function testFuzz_Reaggregate_Idempotent(
+        uint64 count
+    ) public {
         count = uint64(bound(count, 1, 1e9));
 
         vm.prank(reporter);
@@ -354,7 +327,9 @@ contract ReputationRegistryFuzzTest is Test {
         assertEq(agg1.chainCount, agg2.chainCount);
     }
 
-    function testFuzz_Log2_Correct(uint256 x) public {
+    function testFuzz_Log2_Correct(
+        uint256 x
+    ) public {
         x = bound(x, 2, type(uint64).max);
 
         vm.prank(reporter);

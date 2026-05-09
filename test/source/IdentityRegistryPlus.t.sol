@@ -2,8 +2,7 @@
 pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
-import {IdentityRegistryPlus} from
-    "src/source/IdentityRegistryPlus.sol";
+import {IdentityRegistryPlus} from "src/source/IdentityRegistryPlus.sol";
 import {
     InvalidGatewayAdapter,
     InvalidSettlementRegistry,
@@ -13,10 +12,8 @@ import {
     InvalidUEARecipient
 } from "src/source/SourceErrors.sol";
 import {MockGatewayAdapter} from "./mocks/MockGateway.sol";
-import {MockIdentityRegistry} from
-    "./mocks/MockIdentityRegistry.sol";
-import {ERC1967Proxy} from
-    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {MockIdentityRegistry} from "./mocks/MockIdentityRegistry.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract IdentityRegistryPlusTest is Test {
     IdentityRegistryPlus public plus;
@@ -40,12 +37,7 @@ contract IdentityRegistryPlusTest is Test {
             address(impl),
             abi.encodeCall(
                 IdentityRegistryPlus.initialize,
-                (
-                    owner,
-                    address(localReg),
-                    address(gateway),
-                    settlement
-                )
+                (owner, address(localReg), address(gateway), settlement)
             )
         );
         plus = IdentityRegistryPlus(address(proxy));
@@ -73,13 +65,7 @@ contract IdentityRegistryPlusTest is Test {
         new ERC1967Proxy(
             address(impl),
             abi.encodeCall(
-                IdentityRegistryPlus.initialize,
-                (
-                    owner,
-                    address(localReg),
-                    address(0),
-                    settlement
-                )
+                IdentityRegistryPlus.initialize, (owner, address(localReg), address(0), settlement)
             )
         );
     }
@@ -91,12 +77,7 @@ contract IdentityRegistryPlusTest is Test {
             address(impl),
             abi.encodeCall(
                 IdentityRegistryPlus.initialize,
-                (
-                    owner,
-                    address(localReg),
-                    address(gateway),
-                    address(0)
-                )
+                (owner, address(localReg), address(gateway), address(0))
             )
         );
     }
@@ -105,13 +86,9 @@ contract IdentityRegistryPlusTest is Test {
     //  Registration with propagation
     // ──────────────────────────────────────────────
 
-    function test_Register_PropagationEnabled_SendsGatewayCall()
-        public
-    {
+    function test_Register_PropagationEnabled_SendsGatewayCall() public {
         vm.prank(agent);
-        uint256 agentId = plus.register{value: GATEWAY_FEE}(
-            AGENT_URI, uea, ""
-        );
+        uint256 agentId = plus.register{value: GATEWAY_FEE}(AGENT_URI, uea, "");
 
         assertEq(agentId, 0);
         assertEq(gateway.callCount(), 1);
@@ -124,9 +101,7 @@ contract IdentityRegistryPlusTest is Test {
 
     function test_Register_EmitsCrossChainEvent() public {
         vm.expectEmit(true, true, true, true);
-        emit IdentityRegistryPlus.CrossChainRegistrationSent(
-            0, agent, uea
-        );
+        emit IdentityRegistryPlus.CrossChainRegistrationSent(0, agent, uea);
 
         vm.prank(agent);
         plus.register{value: GATEWAY_FEE}(AGENT_URI, uea, "");
@@ -134,9 +109,7 @@ contract IdentityRegistryPlusTest is Test {
 
     function test_Register_SetsSyncFlag() public {
         vm.prank(agent);
-        uint256 agentId = plus.register{value: GATEWAY_FEE}(
-            AGENT_URI, uea, ""
-        );
+        uint256 agentId = plus.register{value: GATEWAY_FEE}(AGENT_URI, uea, "");
 
         assertTrue(plus.isCrossChainSynced(agentId));
     }
@@ -144,22 +117,15 @@ contract IdentityRegistryPlusTest is Test {
     function test_Register_ZeroUEA_Reverts() public {
         vm.prank(agent);
         vm.expectRevert(InvalidUEARecipient.selector);
-        plus.register{value: GATEWAY_FEE}(
-            AGENT_URI, address(0), ""
-        );
+        plus.register{value: GATEWAY_FEE}(AGENT_URI, address(0), "");
     }
 
-    function test_Register_PayloadContainsSettlementTarget()
-        public
-    {
+    function test_Register_PayloadContainsSettlementTarget() public {
         vm.prank(agent);
-        plus.register{value: GATEWAY_FEE}(
-            AGENT_URI, uea, ""
-        );
+        plus.register{value: GATEWAY_FEE}(AGENT_URI, uea, "");
 
         MockGatewayAdapter.Call memory c = gateway.lastCall();
-        (address target,) =
-            abi.decode(c.payload, (address, bytes));
+        (address target,) = abi.decode(c.payload, (address, bytes));
         assertEq(target, settlement);
     }
 
@@ -167,9 +133,7 @@ contract IdentityRegistryPlusTest is Test {
     //  Registration without propagation
     // ──────────────────────────────────────────────
 
-    function test_Register_PropagationDisabled_NoGatewayCall()
-        public
-    {
+    function test_Register_PropagationDisabled_NoGatewayCall() public {
         vm.prank(owner);
         plus.setPropagationEnabled(false);
 
@@ -205,9 +169,7 @@ contract IdentityRegistryPlusTest is Test {
         plus.setPropagationEnabled(true);
 
         vm.prank(agent);
-        plus.retryPropagation{value: GATEWAY_FEE}(
-            agentId, uea, ""
-        );
+        plus.retryPropagation{value: GATEWAY_FEE}(agentId, uea, "");
 
         assertTrue(plus.isCrossChainSynced(agentId));
         assertEq(gateway.callCount(), 1);
@@ -220,31 +182,17 @@ contract IdentityRegistryPlusTest is Test {
         address other = makeAddr("other");
         vm.deal(other, 1 ether);
         vm.prank(other);
-        vm.expectRevert(
-            abi.encodeWithSelector(NotAgentOwner.selector, 0)
-        );
-        plus.retryPropagation{value: GATEWAY_FEE}(
-            0, uea, ""
-        );
+        vm.expectRevert(abi.encodeWithSelector(NotAgentOwner.selector, 0));
+        plus.retryPropagation{value: GATEWAY_FEE}(0, uea, "");
     }
 
-    function test_RetryPropagation_AlreadySynced_Reverts()
-        public
-    {
+    function test_RetryPropagation_AlreadySynced_Reverts() public {
         vm.prank(agent);
-        uint256 agentId = plus.register{value: GATEWAY_FEE}(
-            AGENT_URI, uea, ""
-        );
+        uint256 agentId = plus.register{value: GATEWAY_FEE}(AGENT_URI, uea, "");
 
         vm.prank(agent);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                AlreadySynced.selector, agentId
-            )
-        );
-        plus.retryPropagation{value: GATEWAY_FEE}(
-            agentId, uea, ""
-        );
+        vm.expectRevert(abi.encodeWithSelector(AlreadySynced.selector, agentId));
+        plus.retryPropagation{value: GATEWAY_FEE}(agentId, uea, "");
     }
 
     function test_RetryPropagation_Disabled_Reverts() public {
@@ -256,9 +204,7 @@ contract IdentityRegistryPlusTest is Test {
 
         vm.prank(agent);
         vm.expectRevert(PropagationDisabled.selector);
-        plus.retryPropagation{value: GATEWAY_FEE}(
-            0, uea, ""
-        );
+        plus.retryPropagation{value: GATEWAY_FEE}(0, uea, "");
     }
 
     // ──────────────────────────────────────────────
@@ -271,14 +217,10 @@ contract IdentityRegistryPlusTest is Test {
 
         vm.prank(agent);
         vm.expectRevert();
-        plus.register{value: GATEWAY_FEE}(
-            AGENT_URI, uea, ""
-        );
+        plus.register{value: GATEWAY_FEE}(AGENT_URI, uea, "");
     }
 
-    function test_RegisterLocalOnly_WhenPaused_Reverts()
-        public
-    {
+    function test_RegisterLocalOnly_WhenPaused_Reverts() public {
         vm.prank(owner);
         plus.pause();
 
@@ -299,9 +241,7 @@ contract IdentityRegistryPlusTest is Test {
         assertEq(plus.gatewayAdapter(), newAdapter);
     }
 
-    function test_SetGatewayAdapter_NonOwner_Reverts()
-        public
-    {
+    function test_SetGatewayAdapter_NonOwner_Reverts() public {
         vm.prank(agent);
         vm.expectRevert();
         plus.setGatewayAdapter(makeAddr("x"));
@@ -321,9 +261,7 @@ contract IdentityRegistryPlusTest is Test {
         assertEq(plus.settlementRegistry(), newReg);
     }
 
-    function test_SetSettlementRegistry_Zero_Reverts()
-        public
-    {
+    function test_SetSettlementRegistry_Zero_Reverts() public {
         vm.prank(owner);
         vm.expectRevert(InvalidSettlementRegistry.selector);
         plus.setSettlementRegistry(address(0));
@@ -340,24 +278,18 @@ contract IdentityRegistryPlusTest is Test {
     }
 
     function test_EstimateRegistrationFee() public view {
-        assertEq(
-            plus.estimateRegistrationFee(), GATEWAY_FEE
-        );
+        assertEq(plus.estimateRegistrationFee(), GATEWAY_FEE);
     }
 
     // ──────────────────────────────────────────────
     //  Gateway revert → atomic rollback
     // ──────────────────────────────────────────────
 
-    function test_Register_GatewayReverts_EntireTxReverts()
-        public
-    {
+    function test_Register_GatewayReverts_EntireTxReverts() public {
         gateway.setShouldRevert(true);
 
         vm.prank(agent);
         vm.expectRevert("gateway reverted");
-        plus.register{value: GATEWAY_FEE}(
-            AGENT_URI, uea, ""
-        );
+        plus.register{value: GATEWAY_FEE}(AGENT_URI, uea, "");
     }
 }

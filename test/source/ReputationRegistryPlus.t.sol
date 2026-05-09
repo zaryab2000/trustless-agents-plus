@@ -2,8 +2,7 @@
 pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
-import {ReputationRegistryPlus} from
-    "src/source/ReputationRegistryPlus.sol";
+import {ReputationRegistryPlus} from "src/source/ReputationRegistryPlus.sol";
 import {
     InvalidGatewayAdapter,
     InvalidSettlementRegistry,
@@ -11,10 +10,8 @@ import {
     InvalidBatchThreshold
 } from "src/source/SourceErrors.sol";
 import {MockGatewayAdapter} from "./mocks/MockGateway.sol";
-import {MockReputationRegistry} from
-    "./mocks/MockReputationRegistry.sol";
-import {ERC1967Proxy} from
-    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {MockReputationRegistry} from "./mocks/MockReputationRegistry.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract ReputationRegistryPlusTest is Test {
     ReputationRegistryPlus public plus;
@@ -41,18 +38,12 @@ contract ReputationRegistryPlusTest is Test {
         gateway = new MockGatewayAdapter(GATEWAY_FEE);
         localReg = new MockReputationRegistry();
 
-        ReputationRegistryPlus impl =
-            new ReputationRegistryPlus();
+        ReputationRegistryPlus impl = new ReputationRegistryPlus();
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(impl),
             abi.encodeCall(
                 ReputationRegistryPlus.initialize,
-                (
-                    owner,
-                    address(localReg),
-                    address(gateway),
-                    settlement
-                )
+                (owner, address(localReg), address(gateway), settlement)
             )
         );
         plus = ReputationRegistryPlus(address(proxy));
@@ -67,7 +58,9 @@ contract ReputationRegistryPlusTest is Test {
     //  Helpers
     // ──────────────────────────────────────────────
 
-    function _giveFeedback(uint256 val) internal {
+    function _giveFeedback(
+        uint256 val
+    ) internal {
         vm.prank(client);
         plus.giveFeedback(
             AGENT_ID,
@@ -81,7 +74,9 @@ contract ReputationRegistryPlusTest is Test {
         );
     }
 
-    function _giveFeedbackWithFee(uint256 val) internal {
+    function _giveFeedbackWithFee(
+        uint256 val
+    ) internal {
         vm.prank(client);
         plus.giveFeedback{value: GATEWAY_FEE}(
             AGENT_ID,
@@ -101,9 +96,7 @@ contract ReputationRegistryPlusTest is Test {
 
     function test_Initialize_SetsState() public view {
         assertEq(plus.gatewayAdapter(), address(gateway));
-        assertEq(
-            plus.settlementRegistry(), settlement
-        );
+        assertEq(plus.settlementRegistry(), settlement);
         assertEq(plus.localRegistry(), address(localReg));
         assertTrue(plus.propagationEnabled());
         assertEq(plus.batchThreshold(), 10);
@@ -111,78 +104,50 @@ contract ReputationRegistryPlusTest is Test {
     }
 
     function test_Initialize_ZeroGateway_Reverts() public {
-        ReputationRegistryPlus impl =
-            new ReputationRegistryPlus();
+        ReputationRegistryPlus impl = new ReputationRegistryPlus();
         vm.expectRevert(InvalidGatewayAdapter.selector);
         new ERC1967Proxy(
             address(impl),
             abi.encodeCall(
                 ReputationRegistryPlus.initialize,
-                (
-                    owner,
-                    address(localReg),
-                    address(0),
-                    settlement
-                )
+                (owner, address(localReg), address(0), settlement)
             )
         );
     }
 
     function test_Initialize_ZeroSettlement_Reverts() public {
-        ReputationRegistryPlus impl =
-            new ReputationRegistryPlus();
+        ReputationRegistryPlus impl = new ReputationRegistryPlus();
         vm.expectRevert(InvalidSettlementRegistry.selector);
         new ERC1967Proxy(
             address(impl),
             abi.encodeCall(
                 ReputationRegistryPlus.initialize,
-                (
-                    owner,
-                    address(localReg),
-                    address(gateway),
-                    address(0)
-                )
+                (owner, address(localReg), address(gateway), address(0))
             )
         );
     }
 
-    function test_Initialize_ZeroLocalRegistry_Reverts()
-        public
-    {
-        ReputationRegistryPlus impl =
-            new ReputationRegistryPlus();
+    function test_Initialize_ZeroLocalRegistry_Reverts() public {
+        ReputationRegistryPlus impl = new ReputationRegistryPlus();
         vm.expectRevert("zero local registry");
         new ERC1967Proxy(
             address(impl),
             abi.encodeCall(
-                ReputationRegistryPlus.initialize,
-                (
-                    owner,
-                    address(0),
-                    address(gateway),
-                    settlement
-                )
+                ReputationRegistryPlus.initialize, (owner, address(0), address(gateway), settlement)
             )
         );
     }
 
     function test_Initialize_DefaultsDisabled() public {
-        ReputationRegistryPlus impl =
-            new ReputationRegistryPlus();
+        ReputationRegistryPlus impl = new ReputationRegistryPlus();
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(impl),
             abi.encodeCall(
                 ReputationRegistryPlus.initialize,
-                (
-                    owner,
-                    address(localReg),
-                    address(gateway),
-                    settlement
-                )
+                (owner, address(localReg), address(gateway), settlement)
             )
         );
-        ReputationRegistryPlus fresh =
-            ReputationRegistryPlus(address(proxy));
+        ReputationRegistryPlus fresh = ReputationRegistryPlus(address(proxy));
         assertFalse(fresh.propagationEnabled());
     }
 
@@ -190,9 +155,7 @@ contract ReputationRegistryPlusTest is Test {
     //  giveFeedback — local only (no propagation)
     // ──────────────────────────────────────────────
 
-    function test_GiveFeedback_DisabledPropagation_NoGateway()
-        public
-    {
+    function test_GiveFeedback_DisabledPropagation_NoGateway() public {
         vm.prank(owner);
         plus.setPropagationEnabled(false);
 
@@ -206,9 +169,7 @@ contract ReputationRegistryPlusTest is Test {
     //  propagation (lastPropagated == 0)
     // ──────────────────────────────────────────────
 
-    function test_GiveFeedback_FirstFeedback_Propagates()
-        public
-    {
+    function test_GiveFeedback_FirstFeedback_Propagates() public {
         _giveFeedbackWithFee(80);
 
         assertEq(gateway.callCount(), 1);
@@ -216,13 +177,9 @@ contract ReputationRegistryPlusTest is Test {
         assertGt(plus.lastPropagated(AGENT_ID), 0);
     }
 
-    function test_GiveFeedback_FirstFeedback_EmitsEvent()
-        public
-    {
+    function test_GiveFeedback_FirstFeedback_EmitsEvent() public {
         vm.expectEmit(true, false, false, true);
-        emit ReputationRegistryPlus.ReputationPropagated(
-            AGENT_ID, 1, 80, block.number
-        );
+        emit ReputationRegistryPlus.ReputationPropagated(AGENT_ID, 1, 80, block.number);
 
         _giveFeedbackWithFee(80);
     }
@@ -231,9 +188,7 @@ contract ReputationRegistryPlusTest is Test {
     //  Batch threshold triggering
     // ──────────────────────────────────────────────
 
-    function test_GiveFeedback_BatchThreshold_Propagates()
-        public
-    {
+    function test_GiveFeedback_BatchThreshold_Propagates() public {
         // First feedback triggers (lastPropagated == 0)
         _giveFeedbackWithFee(80);
         assertEq(gateway.callCount(), 1);
@@ -251,9 +206,7 @@ contract ReputationRegistryPlusTest is Test {
         assertEq(plus.pendingFeedbackCount(AGENT_ID), 0);
     }
 
-    function test_GiveFeedback_UnderThreshold_NoPropagation()
-        public
-    {
+    function test_GiveFeedback_UnderThreshold_NoPropagation() public {
         // First feedback triggers
         _giveFeedbackWithFee(80);
 
@@ -271,9 +224,7 @@ contract ReputationRegistryPlusTest is Test {
     //  Time-interval triggering
     // ──────────────────────────────────────────────
 
-    function test_GiveFeedback_TimeInterval_Propagates()
-        public
-    {
+    function test_GiveFeedback_TimeInterval_Propagates() public {
         // First feedback triggers
         _giveFeedbackWithFee(80);
         assertEq(gateway.callCount(), 1);
@@ -310,45 +261,32 @@ contract ReputationRegistryPlusTest is Test {
         localReg.setMockSummary(AGENT_ID, 5, 90, 2);
 
         vm.prank(client);
-        plus.propagateReputation{value: GATEWAY_FEE}(
-            AGENT_ID
-        );
+        plus.propagateReputation{value: GATEWAY_FEE}(AGENT_ID);
 
         assertEq(gateway.callCount(), 1);
     }
 
-    function test_PropagateReputation_Disabled_Reverts()
-        public
-    {
+    function test_PropagateReputation_Disabled_Reverts() public {
         vm.prank(owner);
         plus.setPropagationEnabled(false);
 
         vm.prank(client);
         vm.expectRevert(PropagationDisabled.selector);
-        plus.propagateReputation{value: GATEWAY_FEE}(
-            AGENT_ID
-        );
+        plus.propagateReputation{value: GATEWAY_FEE}(AGENT_ID);
     }
 
-    function test_PropagateReputation_PayloadContainsSettlement()
-        public
-    {
+    function test_PropagateReputation_PayloadContainsSettlement() public {
         localReg.setMockSummary(AGENT_ID, 5, 90, 2);
 
         vm.prank(client);
-        plus.propagateReputation{value: GATEWAY_FEE}(
-            AGENT_ID
-        );
+        plus.propagateReputation{value: GATEWAY_FEE}(AGENT_ID);
 
         MockGatewayAdapter.Call memory c = gateway.lastCall();
-        (address target,) =
-            abi.decode(c.payload, (address, bytes));
+        (address target,) = abi.decode(c.payload, (address, bytes));
         assertEq(target, settlement);
     }
 
-    function test_PropagateReputation_ResetsCountAndTimestamp()
-        public
-    {
+    function test_PropagateReputation_ResetsCountAndTimestamp() public {
         // Build up some pending count
         _giveFeedbackWithFee(80); // triggers (first)
         _giveFeedback(80);
@@ -357,9 +295,7 @@ contract ReputationRegistryPlusTest is Test {
 
         // Manual propagate resets
         vm.prank(client);
-        plus.propagateReputation{value: GATEWAY_FEE}(
-            AGENT_ID
-        );
+        plus.propagateReputation{value: GATEWAY_FEE}(AGENT_ID);
 
         assertEq(plus.pendingFeedbackCount(AGENT_ID), 0);
         assertGt(plus.lastPropagated(AGENT_ID), 0);
@@ -399,9 +335,7 @@ contract ReputationRegistryPlusTest is Test {
         assertEq(plus.canonicalId(3), 300);
     }
 
-    function test_BatchSetCanonicalIds_LengthMismatch_Reverts()
-        public
-    {
+    function test_BatchSetCanonicalIds_LengthMismatch_Reverts() public {
         uint256[] memory locals = new uint256[](2);
         uint256[] memory canonicals = new uint256[](3);
 
@@ -414,22 +348,17 @@ contract ReputationRegistryPlusTest is Test {
     //  Propagated payload uses canonical ID
     // ──────────────────────────────────────────────
 
-    function test_PropagateReputation_UsesCanonicalId()
-        public
-    {
+    function test_PropagateReputation_UsesCanonicalId() public {
         vm.prank(owner);
         plus.setCanonicalId(AGENT_ID, 777);
 
         localReg.setMockSummary(AGENT_ID, 5, 90, 2);
 
         vm.prank(client);
-        plus.propagateReputation{value: GATEWAY_FEE}(
-            AGENT_ID
-        );
+        plus.propagateReputation{value: GATEWAY_FEE}(AGENT_ID);
 
         MockGatewayAdapter.Call memory c = gateway.lastCall();
-        (, bytes memory innerPayload) =
-            abi.decode(c.payload, (address, bytes));
+        (, bytes memory innerPayload) = abi.decode(c.payload, (address, bytes));
 
         // The first argument in submitReputation is the
         // canonical ID — it's inside a struct ABI encoding.
@@ -459,9 +388,7 @@ contract ReputationRegistryPlusTest is Test {
         plus.setGatewayAdapter(address(0));
     }
 
-    function test_SetGatewayAdapter_NonOwner_Reverts()
-        public
-    {
+    function test_SetGatewayAdapter_NonOwner_Reverts() public {
         vm.prank(client);
         vm.expectRevert();
         plus.setGatewayAdapter(makeAddr("x"));
@@ -475,9 +402,7 @@ contract ReputationRegistryPlusTest is Test {
         assertEq(plus.settlementRegistry(), newReg);
     }
 
-    function test_SetSettlementRegistry_Zero_Reverts()
-        public
-    {
+    function test_SetSettlementRegistry_Zero_Reverts() public {
         vm.prank(owner);
         vm.expectRevert(InvalidSettlementRegistry.selector);
         plus.setSettlementRegistry(address(0));
@@ -526,9 +451,7 @@ contract ReputationRegistryPlusTest is Test {
     }
 
     function test_EstimatePropagationFee() public view {
-        assertEq(
-            plus.estimatePropagationFee(), GATEWAY_FEE
-        );
+        assertEq(plus.estimatePropagationFee(), GATEWAY_FEE);
     }
 
     // ──────────────────────────────────────────────
@@ -542,14 +465,7 @@ contract ReputationRegistryPlusTest is Test {
         vm.prank(client);
         vm.expectRevert();
         plus.giveFeedback(
-            AGENT_ID,
-            FB_VALUE,
-            FB_DECIMALS,
-            TAG1,
-            TAG2,
-            ENDPOINT,
-            FEEDBACK_URI,
-            FEEDBACK_HASH
+            AGENT_ID, FB_VALUE, FB_DECIMALS, TAG1, TAG2, ENDPOINT, FEEDBACK_URI, FEEDBACK_HASH
         );
     }
 
@@ -572,38 +488,25 @@ contract ReputationRegistryPlusTest is Test {
     //  Gateway revert → atomic rollback
     // ──────────────────────────────────────────────
 
-    function test_PropagateReputation_GatewayReverts()
-        public
-    {
+    function test_PropagateReputation_GatewayReverts() public {
         gateway.setShouldRevert(true);
 
         vm.prank(client);
         vm.expectRevert("gateway reverted");
-        plus.propagateReputation{value: GATEWAY_FEE}(
-            AGENT_ID
-        );
+        plus.propagateReputation{value: GATEWAY_FEE}(AGENT_ID);
     }
 
     // ──────────────────────────────────────────────
     //  Local registry revert → atomic rollback
     // ──────────────────────────────────────────────
 
-    function test_GiveFeedback_LocalReverts_EntireTxReverts()
-        public
-    {
+    function test_GiveFeedback_LocalReverts_EntireTxReverts() public {
         localReg.setShouldRevert(true);
 
         vm.prank(client);
         vm.expectRevert("feedback reverted");
         plus.giveFeedback(
-            AGENT_ID,
-            FB_VALUE,
-            FB_DECIMALS,
-            TAG1,
-            TAG2,
-            ENDPOINT,
-            FEEDBACK_URI,
-            FEEDBACK_HASH
+            AGENT_ID, FB_VALUE, FB_DECIMALS, TAG1, TAG2, ENDPOINT, FEEDBACK_URI, FEEDBACK_HASH
         );
     }
 }

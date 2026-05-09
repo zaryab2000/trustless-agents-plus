@@ -97,10 +97,7 @@ interface IReputationRegistry {
     );
 
     /// @notice Emitted when the UAIRegistry address is updated.
-    event UAIRegistryUpdated(
-        address indexed oldAddr,
-        address indexed newAddr
-    );
+    event UAIRegistryUpdated(address indexed oldAddr, address indexed newAddr);
 
     // ──────────────────────────────────────────────
     //  Write Functions
@@ -142,12 +139,16 @@ interface IReputationRegistry {
     /// @notice Force recomputation of aggregated reputation for an agent.
     /// @dev Callable by anyone. Removes data for unlinked shadows.
     /// @param agentId The canonical agent ID.
-    function reaggregate(uint256 agentId) external;
+    function reaggregate(
+        uint256 agentId
+    ) external;
 
     /// @notice Update the UAIRegistry address.
     /// @dev Only callable by DEFAULT_ADMIN_ROLE.
     /// @param newUAIRegistry The new UAIRegistry proxy address.
-    function setUAIRegistry(address newUAIRegistry) external;
+    function setUAIRegistry(
+        address newUAIRegistry
+    ) external;
 
     // ──────────────────────────────────────────────
     //  Read Functions
@@ -204,7 +205,9 @@ interface IReputationRegistry {
     /// @notice Get the timestamp of the last aggregation for an agent.
     /// @param agentId The canonical agent ID.
     /// @return The lastAggregated timestamp.
-    function lastUpdated(uint256 agentId) external view returns (uint64);
+    function lastUpdated(
+        uint256 agentId
+    ) external view returns (uint64);
 
     /// @notice Get the current UAIRegistry address.
     /// @return The UAIRegistry contract address.

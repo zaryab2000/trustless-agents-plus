@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {OwnableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-import {Initializable} from
-    "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {UUPSUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {
+    OwnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {
+    PausableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IGatewayAdapter} from "./IGatewayAdapter.sol";
 import {
     InvalidGatewayAdapter,
@@ -54,9 +54,7 @@ contract IdentityRegistryPlus is
     // ──────────────────────────────────────────────
 
     event CrossChainRegistrationSent(
-        uint256 indexed agentId,
-        address indexed owner,
-        address indexed ueaRecipient
+        uint256 indexed agentId, address indexed owner, address indexed ueaRecipient
     );
 
     event GatewayAdapterUpdated(address indexed adapter);
@@ -83,11 +81,7 @@ contract IdentityRegistryPlus is
     bytes32 private constant STORAGE_SLOT =
         0xf1c674ba209da31c146f52c6580f1c703ebb76997a6a13510c04efc0533a1200;
 
-    function _getStorage()
-        private
-        pure
-        returns (IdentityPlusStorage storage s)
-    {
+    function _getStorage() private pure returns (IdentityPlusStorage storage s) {
         bytes32 slot = STORAGE_SLOT;
         assembly {
             s.slot := slot
@@ -152,20 +146,14 @@ contract IdentityRegistryPlus is
     ) external payable whenNotPaused returns (uint256 agentId) {
         IdentityPlusStorage storage s = _getStorage();
 
-        agentId = IIdentityRegistryLocal(s.localRegistry)
-            .register(agentURI);
+        agentId = IIdentityRegistryLocal(s.localRegistry).register(agentURI);
         s.agentOwners[agentId] = msg.sender;
 
         if (s.propagationEnabled) {
             if (ueaRecipient == address(0)) {
                 revert InvalidUEARecipient();
             }
-            _propagateRegistration(
-                agentId,
-                agentURI,
-                ueaRecipient,
-                signatureData
-            );
+            _propagateRegistration(agentId, agentURI, ueaRecipient, signatureData);
         }
     }
 
@@ -177,8 +165,7 @@ contract IdentityRegistryPlus is
         string calldata agentURI
     ) external whenNotPaused returns (uint256 agentId) {
         IdentityPlusStorage storage s = _getStorage();
-        agentId = IIdentityRegistryLocal(s.localRegistry)
-            .register(agentURI);
+        agentId = IIdentityRegistryLocal(s.localRegistry).register(agentURI);
         s.agentOwners[agentId] = msg.sender;
     }
 
@@ -204,11 +191,8 @@ contract IdentityRegistryPlus is
             revert InvalidUEARecipient();
         }
 
-        string memory agentURI = IIdentityRegistryLocal(s.localRegistry)
-            .tokenURI(agentId);
-        _propagateRegistration(
-            agentId, agentURI, ueaRecipient, signatureData
-        );
+        string memory agentURI = IIdentityRegistryLocal(s.localRegistry).tokenURI(agentId);
+        _propagateRegistration(agentId, agentURI, ueaRecipient, signatureData);
     }
 
     // ──────────────────────────────────────────────
@@ -226,30 +210,19 @@ contract IdentityRegistryPlus is
         bytes32 agentCardHash = keccak256(bytes(agentURI));
 
         // Encode UAIRegistry.register(agentURI, agentCardHash)
-        bytes memory registerCalldata = abi.encodeWithSignature(
-            "register(string,bytes32)",
-            agentURI,
-            agentCardHash
-        );
+        bytes memory registerCalldata =
+            abi.encodeWithSignature("register(string,bytes32)", agentURI, agentCardHash);
 
         // Wrap in UniversalPayload targeting settlement registry
-        bytes memory payload = abi.encode(
-            s.settlementRegistry,
-            registerCalldata
-        );
+        bytes memory payload = abi.encode(s.settlementRegistry, registerCalldata);
 
         IGatewayAdapter(s.gatewayAdapter).sendPayload{value: msg.value}(
-            ueaRecipient,
-            payload,
-            signatureData,
-            msg.sender
+            ueaRecipient, payload, signatureData, msg.sender
         );
 
         s.crossChainSynced[agentId] = true;
 
-        emit CrossChainRegistrationSent(
-            agentId, msg.sender, ueaRecipient
-        );
+        emit CrossChainRegistrationSent(agentId, msg.sender, ueaRecipient);
     }
 
     // ──────────────────────────────────────────────
@@ -284,13 +257,8 @@ contract IdentityRegistryPlus is
     }
 
     /// @notice Estimate the gateway fee for a cross-chain registration.
-    function estimateRegistrationFee()
-        external
-        view
-        returns (uint256)
-    {
-        return IGatewayAdapter(_getStorage().gatewayAdapter)
-            .estimateFee();
+    function estimateRegistrationFee() external view returns (uint256) {
+        return IGatewayAdapter(_getStorage().gatewayAdapter).estimateFee();
     }
 
     // ──────────────────────────────────────────────
@@ -323,7 +291,9 @@ contract IdentityRegistryPlus is
         emit LocalRegistryUpdated(registry);
     }
 
-    function setPropagationEnabled(bool enabled) external onlyOwner {
+    function setPropagationEnabled(
+        bool enabled
+    ) external onlyOwner {
         _getStorage().propagationEnabled = enabled;
         emit PropagationToggled(enabled);
     }

@@ -17,7 +17,9 @@ contract MockGatewayAdapter is IGatewayAdapter {
     uint256 public fee;
     bool public shouldRevert;
 
-    constructor(uint256 fee_) {
+    constructor(
+        uint256 fee_
+    ) {
         fee = fee_;
     }
 
@@ -51,11 +53,15 @@ contract MockGatewayAdapter is IGatewayAdapter {
         return calls[calls.length - 1];
     }
 
-    function setShouldRevert(bool val) external {
+    function setShouldRevert(
+        bool val
+    ) external {
         shouldRevert = val;
     }
 
-    function setFee(uint256 fee_) external {
+    function setFee(
+        uint256 fee_
+    ) external {
         fee = fee_;
     }
 }

@@ -19,10 +19,7 @@ contract MockReputationRegistry {
     bool public shouldRevert;
 
     event FeedbackGiven(
-        uint256 indexed agentId,
-        address indexed client,
-        int128 value,
-        uint8 valueDecimals
+        uint256 indexed agentId, address indexed client, int128 value, uint8 valueDecimals
     );
 
     function giveFeedback(
@@ -56,20 +53,8 @@ contract MockReputationRegistry {
         address[] calldata,
         string calldata,
         string calldata
-    )
-        external
-        view
-        returns (
-            uint64 count,
-            int128 summaryValue,
-            uint8 summaryValueDecimals
-        )
-    {
-        return (
-            _feedbackCount[agentId],
-            _summaryValue[agentId],
-            _summaryDecimals[agentId]
-        );
+    ) external view returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals) {
+        return (_feedbackCount[agentId], _summaryValue[agentId], _summaryDecimals[agentId]);
     }
 
     function getClients(
@@ -78,7 +63,9 @@ contract MockReputationRegistry {
         return _clients[agentId];
     }
 
-    function setShouldRevert(bool val) external {
+    function setShouldRevert(
+        bool val
+    ) external {
         shouldRevert = val;
     }
 

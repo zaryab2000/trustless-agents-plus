@@ -9,7 +9,10 @@ contract MockUEAFactory is IUEAFactory {
     mapping(address => bool) private _isUEA;
     mapping(address => bool) private _hasOrigin;
 
-    function addUEA(address uea, UniversalAccountId memory origin) external {
+    function addUEA(
+        address uea,
+        UniversalAccountId memory origin
+    ) external {
         _origins[uea] = origin;
         _isUEA[uea] = true;
         _hasOrigin[uea] = true;
@@ -17,20 +20,13 @@ contract MockUEAFactory is IUEAFactory {
 
     function getOriginForUEA(
         address addr
-    )
-        external
-        view
-        override
-        returns (UniversalAccountId memory account, bool isUEA)
-    {
+    ) external view override returns (UniversalAccountId memory account, bool isUEA) {
         if (_hasOrigin[addr]) {
             return (_origins[addr], _isUEA[addr]);
         }
         return (
             UniversalAccountId({
-                chainNamespace: "push",
-                chainId: "42101",
-                owner: abi.encodePacked(addr)
+                chainNamespace: "push", chainId: "42101", owner: abi.encodePacked(addr)
             }),
             false
         );

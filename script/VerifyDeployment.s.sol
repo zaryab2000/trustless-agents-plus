@@ -5,7 +5,9 @@ import {Script, console} from "forge-std/Script.sol";
 import {UAIRegistry} from "src/UAIRegistry.sol";
 
 contract VerifyDeployment is Script {
-    function run(address proxyAddress) external view {
+    function run(
+        address proxyAddress
+    ) external view {
         UAIRegistry registry = UAIRegistry(proxyAddress);
 
         bool registered = registry.isRegistered(0);

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {
-    Initializable
-} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {
     AccessControlUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
@@ -88,12 +86,17 @@ contract UAIRegistry is
     //  Constructor + Initializer
     // ──────────────────────────────────────────────
 
-    constructor(IUEAFactory _ueaFactory) {
+    constructor(
+        IUEAFactory _ueaFactory
+    ) {
         ueaFactory = _ueaFactory;
         _disableInitializers();
     }
 
-    function initialize(address admin, address pauser) external initializer {
+    function initialize(
+        address admin,
+        address pauser
+    ) external initializer {
         __AccessControl_init();
         __Pausable_init();
         __EIP712_init("UAIRegistry", "1");
@@ -122,8 +125,7 @@ contract UAIRegistry is
             emit AgentURIUpdated(agentId, _agentURI);
             emit AgentCardHashUpdated(agentId, agentCardHash);
         } else {
-            (UniversalAccountId memory origin, bool isUEA) =
-                ueaFactory.getOriginForUEA(msg.sender);
+            (UniversalAccountId memory origin, bool isUEA) = ueaFactory.getOriginForUEA(msg.sender);
 
             record.registered = true;
             record.agentURI = _agentURI;
@@ -160,7 +162,9 @@ contract UAIRegistry is
     }
 
     /// @inheritdoc IUAIRegistry
-    function setAgentCardHash(bytes32 newHash) external whenNotPaused {
+    function setAgentCardHash(
+        bytes32 newHash
+    ) external whenNotPaused {
         if (newHash == bytes32(0)) revert AgentCardHashRequired();
         uint256 agentId = uint256(uint160(msg.sender));
         UAIRegistryStorage storage s = _getStorage();
@@ -204,19 +208,11 @@ contract UAIRegistry is
         s.usedNonces[agentId][req.nonce] = true;
 
         bytes32 dedupKey = keccak256(
-            abi.encode(
-                req.chainNamespace,
-                req.chainId,
-                req.registryAddress,
-                req.shadowAgentId
-            )
+            abi.encode(req.chainNamespace, req.chainId, req.registryAddress, req.shadowAgentId)
         );
         if (s.shadowToCanonical[dedupKey] != 0) {
             revert ShadowAlreadyClaimed(
-                req.chainNamespace,
-                req.chainId,
-                req.registryAddress,
-                req.shadowAgentId
+                req.chainNamespace, req.chainId, req.registryAddress, req.shadowAgentId
             );
         }
         if (s.shadows[agentId].length >= MAX_SHADOWS) {
@@ -240,9 +236,8 @@ contract UAIRegistry is
 
         s.shadowToCanonical[dedupKey] = agentId;
 
-        bytes32 chainKey = keccak256(
-            abi.encode(req.chainNamespace, req.chainId, req.registryAddress)
-        );
+        bytes32 chainKey =
+            keccak256(abi.encode(req.chainNamespace, req.chainId, req.registryAddress));
         s.shadowIndex[agentId][chainKey] = s.shadows[agentId].length - 1;
         s.shadowExists[agentId][chainKey] = true;
 
@@ -270,9 +265,7 @@ contract UAIRegistry is
             revert AgentNotRegistered(agentId);
         }
 
-        bytes32 chainKey = keccak256(
-            abi.encode(chainNamespace, chainId, registryAddress)
-        );
+        bytes32 chainKey = keccak256(abi.encode(chainNamespace, chainId, registryAddress));
         if (!s.shadowExists[agentId][chainKey]) {
             revert ShadowNotFound(chainNamespace, chainId, registryAddress);
         }
@@ -282,10 +275,7 @@ contract UAIRegistry is
 
         bytes32 dedupKey = keccak256(
             abi.encode(
-                entry.chainNamespace,
-                entry.chainId,
-                entry.registryAddress,
-                entry.shadowAgentId
+                entry.chainNamespace, entry.chainId, entry.registryAddress, entry.shadowAgentId
             )
         );
         delete s.shadowToCanonical[dedupKey];
@@ -296,11 +286,7 @@ contract UAIRegistry is
             s.shadows[agentId][idx] = lastEntry;
 
             bytes32 lastChainKey = keccak256(
-                abi.encode(
-                    lastEntry.chainNamespace,
-                    lastEntry.chainId,
-                    lastEntry.registryAddress
-                )
+                abi.encode(lastEntry.chainNamespace, lastEntry.chainId, lastEntry.registryAddress)
             );
             s.shadowIndex[agentId][lastChainKey] = idx;
         }
@@ -317,7 +303,9 @@ contract UAIRegistry is
     // ──────────────────────────────────────────────
 
     /// @inheritdoc IUAIRegistry
-    function ownerOf(uint256 agentId) external view returns (address) {
+    function ownerOf(
+        uint256 agentId
+    ) external view returns (address) {
         if (!_getStorage().records[agentId].registered) {
             revert AgentNotRegistered(agentId);
         }
@@ -351,7 +339,9 @@ contract UAIRegistry is
     // ──────────────────────────────────────────────
 
     /// @inheritdoc IUAIRegistry
-    function canonicalUEA(uint256 agentId) external view returns (address) {
+    function canonicalUEA(
+        uint256 agentId
+    ) external view returns (address) {
         if (!_getStorage().records[agentId].registered) {
             revert AgentNotRegistered(agentId);
         }
@@ -359,7 +349,9 @@ contract UAIRegistry is
     }
 
     /// @inheritdoc IUAIRegistry
-    function agentIdOfUEA(address uea) external view returns (uint256) {
+    function agentIdOfUEA(
+        address uea
+    ) external view returns (uint256) {
         uint256 agentId = uint256(uint160(uea));
         if (!_getStorage().records[agentId].registered) return 0;
         return agentId;
@@ -380,21 +372,20 @@ contract UAIRegistry is
         uint256 shadowAgentId
     ) external view returns (address canonical, bool verified) {
         UAIRegistryStorage storage s = _getStorage();
-        bytes32 dedupKey = keccak256(
-            abi.encode(chainNamespace, chainId, registryAddress, shadowAgentId)
-        );
+        bytes32 dedupKey =
+            keccak256(abi.encode(chainNamespace, chainId, registryAddress, shadowAgentId));
         uint256 agentId = s.shadowToCanonical[dedupKey];
         if (agentId == 0) return (address(0), false);
 
-        bytes32 chainKey = keccak256(
-            abi.encode(chainNamespace, chainId, registryAddress)
-        );
+        bytes32 chainKey = keccak256(abi.encode(chainNamespace, chainId, registryAddress));
         uint256 idx = s.shadowIndex[agentId][chainKey];
         return (address(uint160(agentId)), s.shadows[agentId][idx].verified);
     }
 
     /// @inheritdoc IUAIRegistry
-    function isRegistered(uint256 agentId) external view returns (bool) {
+    function isRegistered(
+        uint256 agentId
+    ) external view returns (bool) {
         return _getStorage().records[agentId].registered;
     }
 
@@ -410,12 +401,20 @@ contract UAIRegistry is
     // ──────────────────────────────────────────────
 
     /// @inheritdoc IUAIRegistry
-    function transferFrom(address, address, uint256) external pure {
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) external pure {
         revert IdentityNotTransferable();
     }
 
     /// @inheritdoc IUAIRegistry
-    function safeTransferFrom(address, address, uint256) external pure {
+    function safeTransferFrom(
+        address,
+        address,
+        uint256
+    ) external pure {
         revert IdentityNotTransferable();
     }
 
@@ -430,12 +429,18 @@ contract UAIRegistry is
     }
 
     /// @inheritdoc IUAIRegistry
-    function approve(address, uint256) external pure {
+    function approve(
+        address,
+        uint256
+    ) external pure {
         revert IdentityNotTransferable();
     }
 
     /// @inheritdoc IUAIRegistry
-    function setApprovalForAll(address, bool) external pure {
+    function setApprovalForAll(
+        address,
+        bool
+    ) external pure {
         revert IdentityNotTransferable();
     }
 
@@ -445,14 +450,8 @@ contract UAIRegistry is
 
     function supportsInterface(
         bytes4 interfaceId
-    )
-        public
-        view
-        override(AccessControlUpgradeable)
-        returns (bool)
-    {
-        return interfaceId == type(IERC721).interfaceId
-            || interfaceId == type(IERC165).interfaceId
+    ) public view override(AccessControlUpgradeable) returns (bool) {
+        return interfaceId == type(IERC721).interfaceId || interfaceId == type(IERC165).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -492,30 +491,22 @@ contract UAIRegistry is
 
         UAIRegistryStorage storage s = _getStorage();
         uint256 agentId = uint256(uint160(canonicalUEAAddr));
-        address expectedSigner = _ownerKeyToAddress(
-            s.records[agentId].ownerKey
-        );
+        address expectedSigner = _ownerKeyToAddress(s.records[agentId].ownerKey);
 
-        (address recovered, ECDSA.RecoverError err,) =
-            ECDSA.tryRecover(digest, req.proofData);
+        (address recovered, ECDSA.RecoverError err,) = ECDSA.tryRecover(digest, req.proofData);
 
-        if (
-            err == ECDSA.RecoverError.NoError
-                && recovered == expectedSigner
-        ) {
+        if (err == ECDSA.RecoverError.NoError && recovered == expectedSigner) {
             return true;
         }
 
         if (req.proofData.length >= 20) {
             address signer = _extractSignerAddress(req.proofData);
-            if (
-                signer == expectedSigner
-                    && signer.code.length > 0
-            ) {
+            if (signer == expectedSigner && signer.code.length > 0) {
                 try IERC1271(signer).isValidSignature{gas: 50_000}(
-                    digest,
-                    req.proofData[20:]
-                ) returns (bytes4 magic) {
+                    digest, req.proofData[20:]
+                ) returns (
+                    bytes4 magic
+                ) {
                     return magic == _ERC1271_MAGIC;
                 } catch {
                     return false;

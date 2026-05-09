@@ -6,11 +6,15 @@ contract MockERC1271Wallet {
     bool public shouldRevert;
     bool public returnBadMagic;
 
-    function setRevert(bool r) external {
+    function setRevert(
+        bool r
+    ) external {
         shouldRevert = r;
     }
 
-    function setReturnBadMagic(bool b) external {
+    function setReturnBadMagic(
+        bool b
+    ) external {
         returnBadMagic = b;
     }
 

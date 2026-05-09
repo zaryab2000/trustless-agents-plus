@@ -22,15 +22,11 @@ contract DeployReputation is Script {
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(impl),
             deployer,
-            abi.encodeCall(
-                ReputationRegistry.initialize,
-                (deployer, deployer, uaiRegistryProxy)
-            )
+            abi.encodeCall(ReputationRegistry.initialize, (deployer, deployer, uaiRegistryProxy))
         );
         console.log("Proxy:", address(proxy));
 
-        ReputationRegistry registry =
-            ReputationRegistry(address(proxy));
+        ReputationRegistry registry = ReputationRegistry(address(proxy));
 
         registry.grantRole(registry.REPORTER_ROLE(), reporter);
         console.log("Reporter granted:", reporter);
