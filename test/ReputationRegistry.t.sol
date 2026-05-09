@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {AgentRegistry} from "src/AgentRegistry.sol";
 import {IAgentRegistry} from "src/interfaces/IAgentRegistry.sol";
 import {ReputationRegistry} from "src/ReputationRegistry.sol";
-import {IReputationRegistry} from "src/IReputationRegistry.sol";
+import {IReputationRegistry} from "src/interfaces/IReputationRegistry.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
 import {UniversalAccountId} from "src/libraries/Types.sol";
 import {

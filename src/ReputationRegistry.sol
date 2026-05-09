@@ -11,7 +11,7 @@ import {
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {IAgentRegistry} from "./interfaces/IAgentRegistry.sol";
-import {IReputationRegistry} from "./IReputationRegistry.sol";
+import {IReputationRegistry} from "./interfaces/IReputationRegistry.sol";
 import {
     AgentNotRegisteredForReputation,
     StaleSubmission,
