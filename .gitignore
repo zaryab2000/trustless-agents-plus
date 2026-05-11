@@ -10,3 +10,12 @@ broadcast/
 # OS
 .DS_Store
 doc-internal/
+
+# Demo artifacts
+agents-dummy/*
+!agents-dummy/.gitkeep
+demo-agent-card-*.json
+
+# Node (display scripts)
+node_modules/
+pnpm-lock.yaml

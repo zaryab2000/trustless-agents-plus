@@ -37,11 +37,11 @@ forge test --match-path test/source/ReputationRegistrySource.t.sol -vv
 
 ```bash
 # AgentRegistry (Push Chain)
-DEPLOYER_KEY=0x... forge script script/Deploy.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
+DEPLOYER_KEY=0x... forge script script/deploy/Deploy.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
 
 # ReputationRegistry (Push Chain, requires existing AgentRegistry proxy)
 AGENT_REGISTRY_PROXY=0x... INITIAL_REPORTER=0x... INITIAL_SLASHER=0x... \
-  forge script script/DeployReputation.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
+  forge script script/deploy/DeployReputation.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
 ```
 
 ## Architecture
@@ -84,8 +84,14 @@ Composition-based wrappers over existing ERC-8004 contracts (register/giveFeedba
 
 `test_FunctionName_Condition_ExpectedResult` (e.g. `test_Bind_ExpiredDeadline_Reverts`). Fuzz tests use `testFuzz_` prefix.
 
+## Address Books
+
+- `docs/tap_address_book.md` — TAP contract addresses (AgentRegistry, ReputationRegistry, roles, upgrade history)
+- `docs/ext_address_book.md` — External dependencies (UEA Factory, ERC-8004 registries, Push Chain gateways)
+
 ## External References
 
-- ERC-8004 registry addresses: mainnet `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`, testnet `0x8004A818BFB912233c491871b3d84c89A494BD9e`
+- ERC-8004 IdentityRegistry: mainnet `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`, testnet `0x8004A818BFB912233c491871b3d84c89A494BD9e`
+- ERC-8004 ReputationRegistry: mainnet `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`, testnet `0x8004B663056A597Dffe9eCcC1965A193B7388713`
 - Push Chain Donut testnet chain ID: `42101`
 - Full spec in `PRD.md`, internal design docs in `docs/`
