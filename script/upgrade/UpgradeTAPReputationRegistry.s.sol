@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import {Script, console} from "forge-std/Script.sol";
-import {ReputationRegistry} from "src/ReputationRegistry.sol";
+import {TAPReputationRegistry} from "src/TAPReputationRegistry.sol";
 
 interface IProxyAdmin {
     function upgradeAndCall(
@@ -12,26 +12,26 @@ interface IProxyAdmin {
     ) external;
 }
 
-contract UpgradeReputationRegistry is Script {
+contract UpgradeTAPReputationRegistry is Script {
     function run() external {
         address proxy = vm.envAddress("REPUTATION_REGISTRY_PROXY");
         address proxyAdmin = vm.envAddress("REPUTATION_REGISTRY_PROXY_ADMIN");
 
-        ReputationRegistry old = ReputationRegistry(proxy);
+        TAPReputationRegistry old = TAPReputationRegistry(proxy);
         console.log("Proxy:", proxy);
         console.log("ProxyAdmin:", proxyAdmin);
-        console.log("Old AgentRegistry link:", address(old.getAgentRegistry()));
+        console.log("Old TAPRegistry link:", address(old.getTAPRegistry()));
 
         vm.startBroadcast();
 
-        ReputationRegistry newImpl = new ReputationRegistry();
+        TAPReputationRegistry newImpl = new TAPReputationRegistry();
         console.log("New Implementation:", address(newImpl));
 
         IProxyAdmin(proxyAdmin).upgradeAndCall(proxy, address(newImpl), "");
         console.log("Upgrade complete");
 
-        ReputationRegistry upgraded = ReputationRegistry(proxy);
-        console.log("Post-upgrade AgentRegistry link:", address(upgraded.getAgentRegistry()));
+        TAPReputationRegistry upgraded = TAPReputationRegistry(proxy);
+        console.log("Post-upgrade TAPRegistry link:", address(upgraded.getTAPRegistry()));
 
         vm.stopBroadcast();
     }
