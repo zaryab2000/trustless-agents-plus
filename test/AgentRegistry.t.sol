@@ -150,7 +150,46 @@ contract AgentRegistryTest is Test {
         registry.register(AGENT_URI, CARD_HASH);
 
         vm.prank(addr2);
-        vm.expectRevert(AgentIdCollision.selector);
+        vm.expectRevert(abi.encodeWithSelector(AgentIdCollision.selector, 1, addr1));
+        registry.register(AGENT_URI, CARD_HASH);
+    }
+
+    function test_Register_ZeroIdReserved_Gets10M() public {
+        // uint160(10_000_000) % 10_000_000 == 0 → should get 10_000_000
+        address zeroAddr = address(uint160(10_000_000));
+
+        vm.prank(zeroAddr);
+        uint256 agentId = registry.register(AGENT_URI, CARD_HASH);
+        assertEq(agentId, 10_000_000);
+        assertTrue(registry.isRegistered(10_000_000));
+    }
+
+    function test_AgentIdOfUEA_ZeroIdReserved_Unambiguous() public {
+        address zeroAddr = address(uint160(10_000_000));
+
+        // Before registration: returns 0 (not registered)
+        assertEq(registry.agentIdOfUEA(zeroAddr), 0);
+
+        // After registration: returns 10_000_000 (not 0)
+        vm.prank(zeroAddr);
+        registry.register(AGENT_URI, CARD_HASH);
+        assertEq(registry.agentIdOfUEA(zeroAddr), 10_000_000);
+
+        // Unregistered address still returns 0
+        address nobody = makeAddr("nobody");
+        assertEq(registry.agentIdOfUEA(nobody), 0);
+    }
+
+    function test_Register_MultipleZeroTruncations_NoCollision() public {
+        // Both truncate to 0 → both get 10_000_000 → second should collide
+        address addr1 = address(uint160(10_000_000));
+        address addr2 = address(uint160(20_000_000));
+
+        vm.prank(addr1);
+        registry.register(AGENT_URI, CARD_HASH);
+
+        vm.prank(addr2);
+        vm.expectRevert(abi.encodeWithSelector(AgentIdCollision.selector, 10_000_000, addr1));
         registry.register(AGENT_URI, CARD_HASH);
     }
 

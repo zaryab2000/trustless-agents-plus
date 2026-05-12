@@ -68,7 +68,8 @@ contract AgentRegistryFuzz is Test {
         vm.assume(caller != admin);
         vm.assume(caller != _proxyAdmin());
 
-        uint256 expectedId = uint256(uint160(caller)) % 10_000_000;
+        uint256 truncated = uint256(uint160(caller)) % 10_000_000;
+        uint256 expectedId = truncated == 0 ? 10_000_000 : truncated;
         vm.assume(!registry.isRegistered(expectedId));
 
         vm.prank(caller);
@@ -83,12 +84,14 @@ contract AgentRegistryFuzz is Test {
         vm.assume(caller != admin);
         vm.assume(caller != _proxyAdmin());
 
-        uint256 expectedId = uint256(uint160(caller)) % 10_000_000;
+        uint256 truncated = uint256(uint160(caller)) % 10_000_000;
+        uint256 expectedId = truncated == 0 ? 10_000_000 : truncated;
         vm.assume(!registry.isRegistered(expectedId));
 
         vm.prank(caller);
         uint256 agentId = registry.register("ipfs://fuzz", CARD_HASH);
-        assertLt(agentId, 10_000_000);
+        assertGt(agentId, 0);
+        assertLe(agentId, 10_000_000);
     }
 
     function _proxyAdmin() internal view returns (address) {

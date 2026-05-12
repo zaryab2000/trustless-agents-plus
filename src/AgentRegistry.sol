@@ -129,7 +129,10 @@ contract AgentRegistry is
             emit AgentCardHashUpdated(agentId, agentCardHash);
         } else {
             agentId = uint256(uint160(msg.sender)) % 10_000_000;
-            if (s.records[agentId].registered) revert AgentIdCollision();
+            if (agentId == 0) agentId = 10_000_000;
+            if (s.records[agentId].registered) {
+                revert AgentIdCollision(agentId, _ownerKeyToAddress(s.records[agentId].ownerKey));
+            }
 
             (UniversalAccountId memory origin, bool isUEA) = ueaFactory.getOriginForUEA(msg.sender);
 
@@ -492,7 +495,9 @@ contract AgentRegistry is
         bytes32 digest = _hashTypedDataV4(structHash);
 
         AgentRegistryStorage storage s = _getStorage();
-        uint256 agentId = s.ownerToAgentId[canonicalUEAAddr] - 1; // caller verified registration
+        uint256 raw = s.ownerToAgentId[canonicalUEAAddr];
+        if (raw == 0) revert AgentNotRegistered(uint256(uint160(canonicalUEAAddr)) % 10_000_000);
+        uint256 agentId = raw - 1;
         address expectedSigner = _ownerKeyToAddress(s.records[agentId].ownerKey);
 
         (address recovered, ECDSA.RecoverError err,) = ECDSA.tryRecover(digest, req.proofData);
