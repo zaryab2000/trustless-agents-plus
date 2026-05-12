@@ -12,7 +12,7 @@ The ReputationRegistry is a cross-chain agent reputation aggregator that collect
 
 ```bash
 forge build                    # compile
-forge test                     # all tests (211 passing: unit, binding, fuzz, integration, source-chain)
+forge test                     # all tests (unit, binding, fuzz, integration)
 forge test -vv                 # verbose output
 forge test --gas-report        # with gas reporting
 forge fmt                      # format
@@ -27,21 +27,17 @@ forge test --match-test test_Register_FirstTime_CreatesRecord -vv
 
 # Integration tests (auto-skip without fork)
 forge test --match-path test/AgentRegistry.integration.t.sol --fork-url $PUSH_CHAIN_RPC -vv
-
-# Source-chain contracts
-forge test --match-path test/source/IdentityRegistrySource.t.sol -vv
-forge test --match-path test/source/ReputationRegistrySource.t.sol -vv
 ```
 
 ## Deployment
 
 ```bash
 # AgentRegistry (Push Chain)
-DEPLOYER_KEY=0x... forge script script/Deploy.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
+DEPLOYER_KEY=0x... forge script script/deploy/Deploy.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
 
 # ReputationRegistry (Push Chain, requires existing AgentRegistry proxy)
 AGENT_REGISTRY_PROXY=0x... INITIAL_REPORTER=0x... INITIAL_SLASHER=0x... \
-  forge script script/DeployReputation.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
+  forge script script/deploy/DeployReputation.s.sol --rpc-url $PUSH_CHAIN_RPC --broadcast
 ```
 
 ## Architecture
@@ -54,21 +50,15 @@ Two upgradeable contracts deployed behind `TransparentUpgradeableProxy`:
 
 - **ReputationRegistry** — Cross-chain reputation aggregation. Authorized `REPORTER_ROLE` addresses submit per-chain `ChainReputation` snapshots. Validates that the target chain has an active binding in AgentRegistry. Aggregation computes weighted average normalized to 18 decimals, with a scoring formula: `baseScore` (capped 7000 bps from avg value) * `volumeMultiplier` (log2-scaled feedback count) + `diversityBonus` (500 bps per chain, capped 2000) - `slashPenalty`. Score output is 0-10000 bps. `SLASHER_ROLE` records slash events with cumulative severity deductions.
 
-### Source layer (per-chain ERC-8004+ source-chain wrappers, in `src/source/`)
+### Cross-chain invocation (no source-chain wrappers)
 
-Composition-based wrappers over existing ERC-8004 contracts (register/giveFeedback are non-virtual in base):
-
-- **IdentityRegistrySource** — Registers locally via existing IdentityRegistry, then propagates to Push Chain AgentRegistry via `IGatewayAdapter`. UUPS-upgradeable with `OwnableUpgradeable`.
-
-- **ReputationRegistrySource** — Submits feedback locally, batches reputation snapshots (threshold count or time interval), and propagates to Push Chain ReputationRegistry via gateway. Manages local-to-canonical agent ID mappings.
-
-- **PushGatewayAdapter** — `IGatewayAdapter` implementation wrapping Push Chain's Universal Gateway for cross-chain payload delivery.
+Source chains (Sepolia, Base, BSC) use the existing ERC-8004 IdentityRegistry directly. Agents call Push Chain's `AgentRegistry` / `ReputationRegistry` either directly on Push Chain (Track 1) or via Push Chain's Universal Gateway from the source chain (Track 1.a). See `docs/TRACK1_WORKFLOW.md` and `docs/TRACK1-a_workflow.md`.
 
 ### Key design patterns
 
 - **ERC-7201 namespaced storage** on all contracts for upgrade safety
 - **UEAFactory** at `0x00000000000000000000000000000000000000eA` (Push Chain predeploy) — only `getOriginForUEA()` is called (view, no reentrancy risk)
-- **AccessControlUpgradeable** for settlement contracts (PAUSER_ROLE, REPORTER_ROLE, SLASHER_ROLE); **OwnableUpgradeable** for source-chain wrappers
+- **AccessControlUpgradeable** for settlement contracts (PAUSER_ROLE, REPORTER_ROLE, SLASHER_ROLE)
 - **Custom errors** in `src/libraries/Errors.sol` (identity) and `src/libraries/ReputationErrors.sol` (reputation) — no string reverts in production code
 
 ## Compiler and Toolchain
@@ -84,8 +74,14 @@ Composition-based wrappers over existing ERC-8004 contracts (register/giveFeedba
 
 `test_FunctionName_Condition_ExpectedResult` (e.g. `test_Bind_ExpiredDeadline_Reverts`). Fuzz tests use `testFuzz_` prefix.
 
+## Address Books
+
+- `docs/tap_address_book.md` — TAP contract addresses (AgentRegistry, ReputationRegistry, roles, upgrade history)
+- `docs/ext_address_book.md` — External dependencies (UEA Factory, ERC-8004 registries, Push Chain gateways)
+
 ## External References
 
-- ERC-8004 registry addresses: mainnet `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`, testnet `0x8004A818BFB912233c491871b3d84c89A494BD9e`
+- ERC-8004 IdentityRegistry: mainnet `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`, testnet `0x8004A818BFB912233c491871b3d84c89A494BD9e`
+- ERC-8004 ReputationRegistry: mainnet `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`, testnet `0x8004B663056A597Dffe9eCcC1965A193B7388713`
 - Push Chain Donut testnet chain ID: `42101`
 - Full spec in `PRD.md`, internal design docs in `docs/`

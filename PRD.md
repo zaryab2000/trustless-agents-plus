@@ -768,7 +768,7 @@ Deploy `MockUEAFactory`, `UAIRegistry` (behind a transparent proxy), and initial
 
 ### Step 8: Implement deployment script
 
-**File:** `script/Deploy.s.sol`
+**File:** `script/deploy/Deploy.s.sol`
 
 A Forge script that:
 1. Deploys `UAIRegistry` implementation contract
@@ -778,14 +778,14 @@ A Forge script that:
 
 Constructor arg for `ueaFactory`: `0x00000000000000000000000000000000000000eA` (Push Chain UEAFactory).
 
-**File:** `script/VerifyDeployment.s.sol`
+**File:** `script/deploy/VerifyDeployment.s.sol`
 
 Read-only script that:
 1. Calls `isRegistered(0)` — should return false
 2. Calls `ueaFactory()` — should return the UEAFactory address
 3. Logs domain separator for manual verification
 
-**Verification:** `forge script script/Deploy.s.sol --rpc-url $PUSH_CHAIN_RPC --private-key $DEPLOYER_KEY --broadcast` deploys successfully on Push Chain testnet. Do **not** deploy to mainnet without explicit operator confirmation.
+**Verification:** `forge script script/deploy/Deploy.s.sol --rpc-url $PUSH_CHAIN_RPC --private-key $DEPLOYER_KEY --broadcast` deploys successfully on Push Chain testnet. Do **not** deploy to mainnet without explicit operator confirmation.
 
 ### Step 9: Integration test against forked Push Chain
 

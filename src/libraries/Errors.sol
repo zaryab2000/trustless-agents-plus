@@ -43,3 +43,8 @@ error IdentityNotTransferable();
 
 /// @param agentId The agent that hit the 64-binding cap.
 error MaxBindingsExceeded(uint256 agentId);
+
+/// @dev Thrown when two UEA addresses truncate to the same agent ID.
+/// @param agentId The colliding agent ID.
+/// @param existingOwner The address that already holds this ID.
+error AgentIdCollision(uint256 agentId, address existingOwner);

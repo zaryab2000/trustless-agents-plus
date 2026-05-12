@@ -1,0 +1,14 @@
+{
+  "name": "tap-demo-display",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "profile": "node query-profile.mjs",
+    "fragmented": "node query-fragmented.mjs"
+  },
+  "dependencies": {
+    "chalk": "5.4.1",
+    "viem": "2.31.3"
+  }
+}

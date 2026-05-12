@@ -10,7 +10,8 @@ An ERC-8004-compatible Identity Registry deployed on Push Chain that uses the ag
 - `src/interfaces/IAgentRegistry.sol` — interface
 - `src/interfaces/IUEAFactory.sol`, `src/libraries/Types.sol` — Push Chain UEA interfaces
 - `test/` — unit, binding, fuzz, fork-based integration tests
-- `script/Deploy.s.sol`, `script/VerifyDeployment.s.sol` — deployment + verification
+- `script/deploy/` — deployment scripts (`Deploy.s.sol`, `DeployReputation.s.sol`, `VerifyDeployment.s.sol`)
+- `script/upgrade/` — upgrade scripts (`UpgradeAgentRegistry.s.sol`, `UpgradeReputationRegistry.s.sol`)
 
 ## Build & test
 
@@ -30,7 +31,7 @@ forge test --match-path test/AgentRegistry.integration.t.sol \
 ## Deploy
 
 ```bash
-DEPLOYER_KEY=0x... forge script script/Deploy.s.sol \
+DEPLOYER_KEY=0x... forge script script/deploy/Deploy.s.sol \
     --rpc-url $PUSH_CHAIN_RPC --broadcast
 ```
 

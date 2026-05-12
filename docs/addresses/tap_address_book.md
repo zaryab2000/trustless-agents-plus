@@ -1,4 +1,4 @@
-# Address Book
+# TAP Address Book
 
 Deployed contract addresses for TAP (Trustless Agents Plus). Update this file after every deployment or upgrade.
 
@@ -34,14 +34,6 @@ Deployed: 2026-05-09
 | SLASHER_ROLE | `0x53CE8AA36CD92A25AF7AA2cFfd08DC46b080c88a` |
 | ProxyAdmin Owner | `0x53CE8AA36CD92A25AF7AA2cFfd08DC46b080c88a` |
 
-### Push Chain System Contracts
-
-| Contract | Address |
-|----------|---------|
-| UEA Factory | `0x00000000000000000000000000000000000000eA` |
-| Universal Gateway PC | `0x00000000000000000000000000000000000000C1` |
-| Universal Core | `0x00000000000000000000000000000000000000C0` |
-
 ### Block Explorer Links
 
 - [AgentRegistry Proxy](https://donut.push.network/address/0x13499d36729467bd5C6B44725a10a0113cE47178)
@@ -71,17 +63,3 @@ Previous deployments using `agentgraph.*` namespace (superseded by TAP rename):
 | ReputationRegistry Impl (old) | `0x6ed969b1bbcdcc68790ed881ea11ddbb0a47dcb8` | Deprecated |
 | ReputationRegistry Proxy (old) | `0x5ec27E61a3dC153115ddaEFfa4f9D5a9Ab9C3503` | Deprecated |
 
----
-
-## Source-Chain Deployments
-
-_Not yet deployed. Will be added after source-chain wrappers go live._
-
-### External Chain Gateways (for reference)
-
-| Chain | Gateway Address |
-|-------|-----------------|
-| Ethereum Sepolia | `0x05bD7a3D18324c1F7e216f7fBF2b15985aE5281A` |
-| Arbitrum Sepolia | `0x2cd870e0166Ba458dEC615168Fd659AacD795f34` |
-| Base Sepolia | `0xFD4fef1F43aFEc8b5bcdEEc47f35a1431479aC16` |
-| BNB Testnet | `0x44aFFC61983F4348DdddB886349eb992C061EaC0` |
