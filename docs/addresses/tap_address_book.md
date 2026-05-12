@@ -13,7 +13,7 @@ Deployed: 2026-05-09
 | Component | Address |
 |-----------|---------|
 | Proxy | `0x13499d36729467bd5C6B44725a10a0113cE47178` |
-| Implementation (v1) | `0x593a68fc512608e8f5bf4ebf919117c8ab8ecd15` |
+| Implementation (v2) | `0x998e9630b6437bb3c42f42cb48bb9f8124397cf5` |
 | ProxyAdmin | `0x062021b898e2693f41bb69d463c016cda568794e` |
 
 ### ReputationRegistry
@@ -37,7 +37,7 @@ Deployed: 2026-05-09
 ### Block Explorer Links
 
 - [AgentRegistry Proxy](https://donut.push.network/address/0x13499d36729467bd5C6B44725a10a0113cE47178)
-- [AgentRegistry Impl](https://donut.push.network/address/0x593a68fc512608e8f5bf4ebf919117c8ab8ecd15)
+- [AgentRegistry Impl v2](https://donut.push.network/address/0x998e9630b6437bb3c42f42cb48bb9f8124397cf5)
 - [ReputationRegistry Proxy](https://donut.push.network/address/0x90B484063622289742516c5dDFdDf1C1A3C2c50C)
 - [ReputationRegistry Impl](https://donut.push.network/address/0x59ab150c2ba3efd618668a469db29f5c92eedd64)
 
@@ -49,6 +49,7 @@ Deployed: 2026-05-09
 |------|----------|----------|----------|-------|
 | 2026-05-09 | AgentRegistry | — | `0x593a...cd15` | Initial deployment (TAP namespace) |
 | 2026-05-09 | ReputationRegistry | — | `0x59ab...dd64` | Initial deployment (TAP namespace) |
+| 2026-05-12 | AgentRegistry | `0x593a...cd15` | `0x998e...7cf5` | 7-digit truncated agent IDs, ownerToAgentId mapping, collision guard |
 
 ---
 
