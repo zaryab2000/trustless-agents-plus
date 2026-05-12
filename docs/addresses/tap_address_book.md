@@ -63,8 +63,3 @@ Previous deployments using `agentgraph.*` namespace (superseded by TAP rename):
 | ReputationRegistry Impl (old) | `0x6ed969b1bbcdcc68790ed881ea11ddbb0a47dcb8` | Deprecated |
 | ReputationRegistry Proxy (old) | `0x5ec27E61a3dC153115ddaEFfa4f9D5a9Ab9C3503` | Deprecated |
 
----
-
-## Source-Chain Deployments
-
-_Not yet deployed. Will be added after source-chain wrappers go live._
