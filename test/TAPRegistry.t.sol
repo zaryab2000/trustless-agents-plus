@@ -236,13 +236,15 @@ contract TAPRegistryTest is Test {
         assertEq(registry.agentIdOfUEA(ueaUserAlt), agentId);
     }
 
-    function test_Register_SameOwnerDifferentUEA_EmitsUpdateEvents() public {
+    function test_Register_SameOwnerDifferentUEA_EmitsUEALinkedAndUpdateEvents() public {
         vm.prank(realOwner);
         uint256 agentId = registry.register(AGENT_URI, CARD_HASH);
 
         string memory newURI = "ipfs://QmFromAlt";
         bytes32 newHash = keccak256("alt-card");
 
+        vm.expectEmit(true, true, false, false);
+        emit ITAPRegistry.UEALinked(agentId, ueaUserAlt);
         vm.expectEmit(true, false, false, true);
         emit ITAPRegistry.AgentURIUpdated(agentId, newURI);
         vm.expectEmit(true, false, false, true);
@@ -284,6 +286,35 @@ contract TAPRegistryTest is Test {
         vm.stopPrank();
 
         assertEq(registry.tokenURI(agentId), newURI);
+    }
+
+    function test_SetAgentURI_AliasUEA_Updates() public {
+        vm.prank(realOwner);
+        uint256 agentId = registry.register(AGENT_URI, CARD_HASH);
+
+        vm.prank(ueaUserAlt);
+        registry.register("ipfs://alias", keccak256("alias"));
+
+        string memory altURI = "ipfs://QmSetByAlias";
+        vm.prank(ueaUserAlt);
+        registry.setAgentURI(altURI);
+
+        assertEq(registry.tokenURI(agentId), altURI);
+    }
+
+    function test_SetAgentCardHash_AliasUEA_Updates() public {
+        vm.prank(realOwner);
+        uint256 agentId = registry.register(AGENT_URI, CARD_HASH);
+
+        vm.prank(ueaUserAlt);
+        registry.register("ipfs://alias", keccak256("alias"));
+
+        bytes32 altHash = keccak256("set-by-alias");
+        vm.prank(ueaUserAlt);
+        registry.setAgentCardHash(altHash);
+
+        ITAPRegistry.AgentRecord memory rec = registry.getAgentRecord(agentId);
+        assertEq(rec.agentCardHash, altHash);
     }
 
     function test_SetAgentURI_NotRegistered_Reverts() public {

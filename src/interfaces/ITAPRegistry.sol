@@ -94,6 +94,9 @@ interface ITAPRegistry {
     /// @notice Emitted when an agent's card hash is updated (via setAgentCardHash or re-registration).
     event AgentCardHashUpdated(uint256 indexed agentId, bytes32 newHash);
 
+    /// @notice Emitted when a new UEA is linked as an alias for an existing agent identity.
+    event UEALinked(uint256 indexed agentId, address indexed newUEA);
+
     /// @notice Emitted when a per-chain identity is bound to a canonical agent.
     event AgentBound(
         uint256 indexed agentId,
@@ -167,9 +170,9 @@ interface ITAPRegistry {
     //  Reads — ERC-8004-shaped
     // ──────────────────────────────────────────────
 
-    /// @notice Return the owner (UEA address) of a registered agent.
+    /// @notice Return the canonical owner address (EOA) of a registered agent.
     /// @param agentId The agent identifier.
-    /// @return The UEA address that owns this agent identity.
+    /// @return The owner address recovered from the stored owner key.
     function ownerOf(
         uint256 agentId
     ) external view returns (address);

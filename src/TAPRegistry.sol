@@ -154,6 +154,7 @@ contract TAPRegistry is
         if (ownerRaw != 0) {
             agentId = ownerRaw - 1;
             s.ownerToAgentId[msg.sender] = agentId + 1;
+            emit UEALinked(agentId, msg.sender);
             _updateRecord(s, agentId, _agentURI, agentCardHash);
             return agentId;
         }
