@@ -6,23 +6,23 @@ Deployed contract addresses for TAP (Trustless Agents Plus). Update this file af
 
 ## Push Chain Donut Testnet (Chain ID: 42101)
 
-Deployed: 2026-05-09
+Deployed: 2026-05-15
 
 ### TAPRegistry
 
 | Component           | Address                                      |
 | ------------------- | -------------------------------------------- |
-| Proxy               | `0x13499d36729467bd5C6B44725a10a0113cE47178` |
-| Implementation (v2) | `0x998e9630b6437bb3c42f42cb48bb9f8124397cf5` |
-| ProxyAdmin          | `0x062021b898e2693f41bb69d463c016cda568794e` |
+| Proxy               | `0xa2B09263a7a41567D5F53b7d9F7CA1c6cc046CE2` |
+| Implementation (v1) | `0x8d8d5637966f222c89f03cd39f2df3f2f875ea0a` |
+| ProxyAdmin          | `0x45c5a0dcac94c742c786dfb2e251556079d9e07a` |
 
 ### TAPReputationRegistry
 
 | Component           | Address                                      |
 | ------------------- | -------------------------------------------- |
-| Proxy               | `0x90B484063622289742516c5dDFdDf1C1A3C2c50C` |
-| Implementation (v1) | `0x59ab150c2ba3efd618668a469db29f5c92eedd64` |
-| ProxyAdmin          | `0x32e0b8a0fdd30c8a64bf013ea8d224ed79cbcab8` |
+| Proxy               | `0x591A56D98A14e8A88722F794981F00CabB328a91` |
+| Implementation (v1) | `0xbf95b7c742dcfaa45cdab522123c99a439223e42` |
+| ProxyAdmin          | `0x3c662ef36a1e6447bb7ce1809ebf4e37a2a1ec66` |
 
 ### Roles
 
@@ -36,31 +36,32 @@ Deployed: 2026-05-09
 
 ### Block Explorer Links
 
-- [TAPRegistry Proxy](https://donut.push.network/address/0x13499d36729467bd5C6B44725a10a0113cE47178)
-- [TAPRegistry Impl v2](https://donut.push.network/address/0x998e9630b6437bb3c42f42cb48bb9f8124397cf5)
-- [TAPReputationRegistry Proxy](https://donut.push.network/address/0x90B484063622289742516c5dDFdDf1C1A3C2c50C)
-- [TAPReputationRegistry Impl](https://donut.push.network/address/0x59ab150c2ba3efd618668a469db29f5c92eedd64)
+- [TAPRegistry Proxy](https://donut.push.network/address/0xa2B09263a7a41567D5F53b7d9F7CA1c6cc046CE2)
+- [TAPRegistry Impl v1](https://donut.push.network/address/0x8d8d5637966f222c89f03cd39f2df3f2f875ea0a)
+- [TAPReputationRegistry Proxy](https://donut.push.network/address/0x591A56D98A14e8A88722F794981F00CabB328a91)
+- [TAPReputationRegistry Impl v1](https://donut.push.network/address/0xbf95b7c742dcfaa45cdab522123c99a439223e42)
 
 ---
 
-## Upgrade History
+## Deployment History
 
-| Date       | Contract              | Old Impl        | New Impl        | Notes                                                                |
-| ---------- | --------------------- | --------------- | --------------- | -------------------------------------------------------------------- |
-| 2026-05-09 | TAPRegistry           | —               | `0x593a...cd15` | Initial deployment (TAP namespace)                                   |
-| 2026-05-09 | TAPReputationRegistry | —               | `0x59ab...dd64` | Initial deployment (TAP namespace)                                   |
-| 2026-05-12 | TAPRegistry           | `0x593a...cd15` | `0x998e...7cf5` | 7-digit truncated agent IDs, ownerToAgentId mapping, collision guard |
+| Date       | Contract              | Impl Address    | Notes                    |
+| ---------- | --------------------- | --------------- | ------------------------ |
+| 2026-05-15 | TAPRegistry           | `0x8d8d...ea0a` | Fresh deployment (v1)    |
+| 2026-05-15 | TAPReputationRegistry | `0xbf95...3e42` | Fresh deployment (v1)    |
 
 ---
 
 ## Deprecated Deployments
 
-Previous deployments using `agentgraph.*` namespace (superseded by TAP rename):
+Previous deployments (superseded by 2026-05-15 fresh deploy):
 
 | Contract                          | Address                                      | Status     |
 | --------------------------------- | -------------------------------------------- | ---------- |
-| TAPRegistry Impl (old)            | `0x3e7e8195391c5918ab8ba0133bc0dbdcdd62e54d` | Deprecated |
-| TAPRegistry Proxy (old)           | `0xc2E531735594A5275793234C86b51d0E486452Ea` | Deprecated |
-| TAPReputationRegistry Impl (old)  | `0x6ed969b1bbcdcc68790ed881ea11ddbb0a47dcb8` | Deprecated |
-| TAPReputationRegistry Proxy (old) | `0x5ec27E61a3dC153115ddaEFfa4f9D5a9Ab9C3503` | Deprecated |
-
+| TAPRegistry Proxy (old)           | `0x13499d36729467bd5C6B44725a10a0113cE47178` | Deprecated |
+| TAPRegistry Impl v2 (old)         | `0x998e9630b6437bb3c42f42cb48bb9f8124397cf5` | Deprecated |
+| TAPRegistry Impl v1 (old)         | `0x593a6caa38fd093f8b52b6dc5af6a88d77b1cd15` | Deprecated |
+| TAPRegistry ProxyAdmin (old)      | `0x062021b898e2693f41bb69d463c016cda568794e` | Deprecated |
+| TAPReputationRegistry Proxy (old) | `0x90B484063622289742516c5dDFdDf1C1A3C2c50C` | Deprecated |
+| TAPReputationRegistry Impl (old)  | `0x59ab150c2ba3efd618668a469db29f5c92eedd64` | Deprecated |
+| TAPReputationRegistry PA (old)    | `0x32e0b8a0fdd30c8a64bf013ea8d224ed79cbcab8` | Deprecated |

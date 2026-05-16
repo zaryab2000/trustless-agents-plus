@@ -49,7 +49,7 @@ if [[ -f "${REPO_ROOT}/.env" ]]; then
     set +a
 fi
 
-AGENT_REGISTRY="${AGENT_REGISTRY:-0x13499d36729467bd5C6B44725a10a0113cE47178}"
+AGENT_REGISTRY="${AGENT_REGISTRY:-0xa2B09263a7a41567D5F53b7d9F7CA1c6cc046CE2}"
 GATEWAY_SEPOLIA="${GATEWAY_SEPOLIA:-0x05bD7a3D18324c1F7e216f7fBF2b15985aE5281A}"
 SEPOLIA_RPC="${SEPOLIA_RPC:-https://ethereum-sepolia-rpc.publicnode.com}"
 PC_RPC="${PC_RPC:-https://evm.donut.rpc.push.org/}"
@@ -91,7 +91,7 @@ echo "  [2/5] Checking if already registered..."
 
 EXISTING_ID=$(cast call "${AGENT_REGISTRY}" \
     "agentIdOfUEA(address)(uint256)" "${UEA_ADDRESS}" \
-    --rpc-url "${PC_RPC}" 2>/dev/null || echo "0")
+    --rpc-url "${PC_RPC}" 2>/dev/null | awk '{print $1}' || echo "0")
 
 if [[ "${EXISTING_ID}" != "0" ]]; then
     echo "  ALREADY REGISTERED — agent ID ${EXISTING_ID}"
@@ -160,7 +160,7 @@ while [[ ${ATTEMPT} -lt ${MAX_ATTEMPTS} ]]; do
 
     CANONICAL_AGENT_ID=$(cast call "${AGENT_REGISTRY}" \
         "agentIdOfUEA(address)(uint256)" "${UEA_ADDRESS}" \
-        --rpc-url "${PC_RPC}" 2>/dev/null || echo "0")
+        --rpc-url "${PC_RPC}" 2>/dev/null | awk '{print $1}' || echo "0")
 
     if [[ "${CANONICAL_AGENT_ID}" != "0" ]]; then
         echo "  REGISTERED after ${ATTEMPT} polls (~$((ATTEMPT * SLEEP_INTERVAL))s)"
