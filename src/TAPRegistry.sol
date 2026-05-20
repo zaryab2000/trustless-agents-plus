@@ -117,6 +117,38 @@ contract TAPRegistry is
         }
     }
 
+    /// @inheritdoc ITAPRegistry
+    function register(
+        string calldata _agentURI,
+        bytes32 agentCardHash,
+        address originRegistryAddress,
+        uint256 originBoundAgentId
+    ) external whenNotPaused returns (uint256 agentId) {
+        if (agentCardHash == bytes32(0)) revert RegistryErrors.AgentCardHashRequired();
+
+        TAPRegistryStorage storage s = _getStorage();
+        uint256 raw = s.ownerToAgentId[msg.sender];
+
+        if (raw != 0) {
+            agentId = raw - 1;
+            _updateRecord(s, agentId, _agentURI, agentCardHash);
+        } else {
+            agentId = _registerNewOrAlias(s, _agentURI, agentCardHash);
+        }
+
+        if (originRegistryAddress != address(0)) {
+            (UniversalAccountId memory origin,) = ueaFactory.getOriginForUEA(msg.sender);
+            _autoBindOrigin(
+                s,
+                agentId,
+                origin.chainNamespace,
+                origin.chainId,
+                originRegistryAddress,
+                originBoundAgentId
+            );
+        }
+    }
+
     function _updateRecord(
         TAPRegistryStorage storage s,
         uint256 agentId,
@@ -389,6 +421,21 @@ contract TAPRegistry is
         return _getStorage().records[agentId];
     }
 
+    /// @inheritdoc ITAPRegistry
+    function agentIdFromBinding(
+        string calldata chainNamespace,
+        string calldata chainId,
+        address registryAddress,
+        uint256 boundAgentId
+    ) external view returns (uint256 agentId, bool exists) {
+        uint256 stored = _getStorage()
+        .bindToCanonical[
+            keccak256(abi.encode(chainNamespace, chainId, registryAddress, boundAgentId))
+        ];
+        if (stored == 0) return (0, false);
+        return (stored - 1, true);
+    }
+
     // ──────────────────────────────────────────────
     //  ERC-721 transfer surface — all revert
     // ──────────────────────────────────────────────
@@ -463,6 +510,51 @@ contract TAPRegistry is
     // ──────────────────────────────────────────────
     //  Internal
     // ──────────────────────────────────────────────
+
+    function _autoBindOrigin(
+        TAPRegistryStorage storage s,
+        uint256 agentId,
+        string memory chainNamespace,
+        string memory chainId,
+        address registryAddress,
+        uint256 boundAgentId
+    ) private {
+        bytes32 dedupKey =
+            keccak256(abi.encode(chainNamespace, chainId, registryAddress, boundAgentId));
+        if (s.bindToCanonical[dedupKey] != 0) return;
+
+        if (s.bindings[agentId].length >= MAX_BINDINGS) {
+            revert RegistryErrors.MaxBindingsExceeded(agentId);
+        }
+
+        s.bindings[agentId].push(
+            BindEntry({
+                chainNamespace: chainNamespace,
+                chainId: chainId,
+                registryAddress: registryAddress,
+                boundAgentId: boundAgentId,
+                proofType: BindProofType.OWNER_KEY_SIGNED,
+                verified: true,
+                linkedAt: uint64(block.timestamp)
+            })
+        );
+
+        s.bindToCanonical[dedupKey] = agentId + 1;
+
+        bytes32 chainKey = keccak256(abi.encode(chainNamespace, chainId, registryAddress));
+        s.bindIndex[agentId][chainKey] = s.bindings[agentId].length - 1;
+        s.bindExists[agentId][chainKey] = true;
+
+        emit AgentBound(
+            agentId,
+            chainNamespace,
+            chainId,
+            registryAddress,
+            boundAgentId,
+            BindProofType.OWNER_KEY_SIGNED,
+            true
+        );
+    }
 
     function _bindSingle(
         TAPRegistryStorage storage s,

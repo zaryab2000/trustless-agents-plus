@@ -116,6 +116,24 @@ interface ITAPRegistry {
         bytes32 agentCardHash
     ) external returns (uint256 agentId);
 
+    /// @notice Register a new agent identity with automatic origin-chain binding.
+    /// @dev Same as `register(string, bytes32)` but also creates a BindEntry for the
+    ///      origin chain without requiring an EIP-712 signature. The registration tx
+    ///      itself proves ownership. If `originRegistryAddress` is address(0), no
+    ///      binding is created (equivalent to the base overload). On alias registration,
+    ///      the binding is silently skipped if it already exists.
+    /// @param agentURI Metadata URI (e.g. IPFS CID) for the agent card.
+    /// @param agentCardHash Keccak-256 hash of the agent card content.
+    /// @param originRegistryAddress ERC-8004 registry address on the origin chain.
+    /// @param originBoundAgentId Agent's ID on the origin chain registry.
+    /// @return agentId Deterministic ID.
+    function register(
+        string calldata agentURI,
+        bytes32 agentCardHash,
+        address originRegistryAddress,
+        uint256 originBoundAgentId
+    ) external returns (uint256 agentId);
+
     /// @notice Update the metadata URI for the caller's agent.
     /// @param newAgentURI New metadata URI.
     function setAgentURI(
@@ -203,6 +221,22 @@ interface ITAPRegistry {
     function agentIdOfUEA(
         address uea
     ) external view returns (uint256);
+
+    /// @notice Resolve a bound identity to its canonical TAP agent ID.
+    /// @dev Returns (0, false) if no binding exists. Uses the same
+    ///      bindToCanonical mapping as canonicalOwnerFromBinding().
+    /// @param chainNamespace CAIP-2 namespace of the bound chain.
+    /// @param chainId CAIP-2 chain ID of the bound chain.
+    /// @param registryAddress ERC-8004 registry on the bound chain.
+    /// @param boundAgentId Agent ID on the bound chain registry.
+    /// @return agentId The canonical TAP agent ID.
+    /// @return exists True if a binding exists for this tuple.
+    function agentIdFromBinding(
+        string calldata chainNamespace,
+        string calldata chainId,
+        address registryAddress,
+        uint256 boundAgentId
+    ) external view returns (uint256 agentId, bool exists);
 
     /// @notice Return all bind entries linked to an agent.
     /// @param agentId The agent identifier.
