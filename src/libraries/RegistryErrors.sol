@@ -48,3 +48,10 @@ error MaxBindingsExceeded(uint256 agentId);
 /// @param agentId The colliding agent ID.
 /// @param existingOwner The address that already holds this ID.
 error AgentIdCollision(uint256 agentId, address existingOwner);
+
+/// @param size The submitted batch size.
+/// @param max The maximum allowed batch size.
+error BatchBindTooLarge(uint256 size, uint256 max);
+
+/// @dev Thrown when a batch bind call receives an empty array.
+error EmptyBindBatch();

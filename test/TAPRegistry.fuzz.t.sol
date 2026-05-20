@@ -302,6 +302,73 @@ contract TAPRegistryFuzz is Test {
         assertEq(canonical, caller);
     }
 
+    function testFuzz_BatchBind_ValidBatchSize(
+        uint8 size
+    ) public {
+        size = uint8(bound(size, 1, 10));
+
+        (address caller, uint256 callerKey) = makeAddrAndKey("fuzzBatch");
+        vm.prank(caller);
+        registry.register("ipfs://fuzz", CARD_HASH);
+
+        ITAPRegistry.BindRequest[] memory reqs = new ITAPRegistry.BindRequest[](size);
+        for (uint256 i; i < size; i++) {
+            string memory chainId = vm.toString(i + 5000);
+            uint256 nonce = i + 1;
+            uint256 deadline = block.timestamp + 1 hours;
+
+            bytes32 structHash = keccak256(
+                abi.encode(
+                    BIND_TYPEHASH,
+                    caller,
+                    keccak256(bytes("eip155")),
+                    keccak256(bytes(chainId)),
+                    address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
+                    i,
+                    nonce,
+                    deadline
+                )
+            );
+            bytes32 digest =
+                keccak256(abi.encodePacked("\x19\x01", _getDomainSeparator(), structHash));
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(callerKey, digest);
+
+            reqs[i] = ITAPRegistry.BindRequest({
+                chainNamespace: "eip155",
+                chainId: chainId,
+                registryAddress: address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
+                boundAgentId: i,
+                proofType: ITAPRegistry.BindProofType.OWNER_KEY_SIGNED,
+                proofData: abi.encodePacked(r, s, v),
+                nonce: nonce,
+                deadline: deadline
+            });
+        }
+
+        vm.prank(caller);
+        registry.batchBind(reqs);
+
+        ITAPRegistry.BindEntry[] memory bindings =
+            registry.getBindings(registry.agentIdOfUEA(caller));
+        assertEq(bindings.length, size);
+    }
+
+    function testFuzz_BatchBind_OversizedReverts(
+        uint16 size
+    ) public {
+        size = uint16(bound(size, 11, 100));
+
+        (address caller,) = makeAddrAndKey("fuzzOversize");
+        vm.prank(caller);
+        registry.register("ipfs://fuzz", CARD_HASH);
+
+        ITAPRegistry.BindRequest[] memory reqs = new ITAPRegistry.BindRequest[](size);
+
+        vm.prank(caller);
+        vm.expectRevert(abi.encodeWithSelector(BatchBindTooLarge.selector, size, 10));
+        registry.batchBind(reqs);
+    }
+
     function testFuzz_CanonicalUEAFromBinding_Consistent(
         uint256 boundAgentId
     ) public {

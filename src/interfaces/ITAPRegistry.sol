@@ -156,6 +156,15 @@ interface ITAPRegistry {
         BindRequest calldata req
     ) external;
 
+    /// @notice Bind multiple per-chain identities in a single transaction.
+    /// @dev All entries bind to the caller's canonical agent. Atomic — reverts
+    ///      entirely if any individual binding fails. Each entry is validated
+    ///      and verified independently (same rules as single bind()).
+    /// @param requests Array of bind requests (max MAX_BATCH_BINDINGS).
+    function batchBind(
+        BindRequest[] calldata requests
+    ) external;
+
     /// @notice Remove a binding from the caller's canonical agent.
     /// @param chainNamespace CAIP-2 namespace of the bound chain (e.g. "eip155").
     /// @param chainId CAIP-2 chain ID of the bound chain (e.g. "1").

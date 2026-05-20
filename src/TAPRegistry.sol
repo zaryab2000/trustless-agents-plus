@@ -32,7 +32,9 @@ import {
     InvalidRegistryAddress,
     IdentityNotTransferable,
     MaxBindingsExceeded,
-    AgentIdCollision
+    AgentIdCollision,
+    BatchBindTooLarge,
+    EmptyBindBatch
 } from "./libraries/RegistryErrors.sol";
 
 /// @title TAPRegistry
@@ -47,6 +49,8 @@ contract TAPRegistry is
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     uint256 public constant MAX_BINDINGS = 64;
+
+    uint256 public constant MAX_BATCH_BINDINGS = 10;
 
     bytes32 public constant BIND_TYPEHASH = keccak256(
         "Bind(address canonicalOwner,string chainNamespace,string chainId,"
@@ -225,68 +229,25 @@ contract TAPRegistry is
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[msg.sender];
         if (raw == 0) revert AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        _bindSingle(s, raw - 1, req);
+    }
+
+    /// @inheritdoc ITAPRegistry
+    function batchBind(
+        BindRequest[] calldata requests
+    ) external whenNotPaused {
+        uint256 len = requests.length;
+        if (len == 0) revert EmptyBindBatch();
+        if (len > MAX_BATCH_BINDINGS) revert BatchBindTooLarge(len, MAX_BATCH_BINDINGS);
+
+        TAPRegistryStorage storage s = _getStorage();
+        uint256 raw = s.ownerToAgentId[msg.sender];
+        if (raw == 0) revert AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
         uint256 agentId = raw - 1;
-        if (bytes(req.chainNamespace).length == 0 || bytes(req.chainId).length == 0) {
-            revert InvalidChainIdentifier();
-        }
-        if (req.registryAddress == address(0)) {
-            revert InvalidRegistryAddress();
-        }
-        if (req.proofType != BindProofType.OWNER_KEY_SIGNED) {
-            revert UnsupportedProofType();
-        }
-        if (req.deadline < block.timestamp) {
-            revert BindExpired(req.deadline);
-        }
-        if (s.usedNonces[agentId][req.nonce]) {
-            revert BindNonceUsed(req.nonce);
-        }
 
-        s.usedNonces[agentId][req.nonce] = true;
-
-        bytes32 dedupKey = keccak256(
-            abi.encode(req.chainNamespace, req.chainId, req.registryAddress, req.boundAgentId)
-        );
-        if (s.bindToCanonical[dedupKey] != 0) {
-            revert BindingAlreadyClaimed(
-                req.chainNamespace, req.chainId, req.registryAddress, req.boundAgentId
-            );
+        for (uint256 i; i < len; i++) {
+            _bindSingle(s, agentId, requests[i]);
         }
-        if (s.bindings[agentId].length >= MAX_BINDINGS) {
-            revert MaxBindingsExceeded(agentId);
-        }
-
-        bool verified = _verifyBindSignature(msg.sender, req);
-        if (!verified) revert InvalidBindSignature();
-
-        s.bindings[agentId].push(
-            BindEntry({
-                chainNamespace: req.chainNamespace,
-                chainId: req.chainId,
-                registryAddress: req.registryAddress,
-                boundAgentId: req.boundAgentId,
-                proofType: req.proofType,
-                verified: true,
-                linkedAt: uint64(block.timestamp)
-            })
-        );
-
-        s.bindToCanonical[dedupKey] = agentId + 1;
-
-        bytes32 chainKey =
-            keccak256(abi.encode(req.chainNamespace, req.chainId, req.registryAddress));
-        s.bindIndex[agentId][chainKey] = s.bindings[agentId].length - 1;
-        s.bindExists[agentId][chainKey] = true;
-
-        emit AgentBound(
-            agentId,
-            req.chainNamespace,
-            req.chainId,
-            req.registryAddress,
-            req.boundAgentId,
-            req.proofType,
-            true
-        );
     }
 
     /// @inheritdoc ITAPRegistry
@@ -504,6 +465,74 @@ contract TAPRegistry is
     // ──────────────────────────────────────────────
     //  Internal
     // ──────────────────────────────────────────────
+
+    function _bindSingle(
+        TAPRegistryStorage storage s,
+        uint256 agentId,
+        BindRequest calldata req
+    ) private {
+        if (bytes(req.chainNamespace).length == 0 || bytes(req.chainId).length == 0) {
+            revert InvalidChainIdentifier();
+        }
+        if (req.registryAddress == address(0)) {
+            revert InvalidRegistryAddress();
+        }
+        if (req.proofType != BindProofType.OWNER_KEY_SIGNED) {
+            revert UnsupportedProofType();
+        }
+        if (req.deadline < block.timestamp) {
+            revert BindExpired(req.deadline);
+        }
+        if (s.usedNonces[agentId][req.nonce]) {
+            revert BindNonceUsed(req.nonce);
+        }
+
+        s.usedNonces[agentId][req.nonce] = true;
+
+        bytes32 dedupKey = keccak256(
+            abi.encode(req.chainNamespace, req.chainId, req.registryAddress, req.boundAgentId)
+        );
+        if (s.bindToCanonical[dedupKey] != 0) {
+            revert BindingAlreadyClaimed(
+                req.chainNamespace, req.chainId, req.registryAddress, req.boundAgentId
+            );
+        }
+        if (s.bindings[agentId].length >= MAX_BINDINGS) {
+            revert MaxBindingsExceeded(agentId);
+        }
+
+        bool verified = _verifyBindSignature(msg.sender, req);
+        if (!verified) revert InvalidBindSignature();
+
+        s.bindings[agentId].push(
+            BindEntry({
+                chainNamespace: req.chainNamespace,
+                chainId: req.chainId,
+                registryAddress: req.registryAddress,
+                boundAgentId: req.boundAgentId,
+                proofType: req.proofType,
+                verified: true,
+                linkedAt: uint64(block.timestamp)
+            })
+        );
+
+        s.bindToCanonical[dedupKey] = agentId + 1;
+
+        bytes32 chainKey =
+            keccak256(abi.encode(req.chainNamespace, req.chainId, req.registryAddress));
+        s.bindIndex[agentId][chainKey] = s.bindings[agentId].length - 1;
+        s.bindExists[agentId][chainKey] = true;
+
+        emit AgentBound(
+            agentId,
+            req.chainNamespace,
+            req.chainId,
+            req.registryAddress,
+            req.boundAgentId,
+            req.proofType,
+            true
+        );
+    }
 
     function _verifyBindSignature(
         address callerAddr,
