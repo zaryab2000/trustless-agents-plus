@@ -6,14 +6,14 @@ Deployed contract addresses for TAP (Trustless Agents Plus). Update this file af
 
 ## Push Chain Donut Testnet (Chain ID: 42101)
 
-Deployed: 2026-05-15
+Deployed: 2026-05-15 | Last Upgraded: 2026-05-20
 
 ### TAPRegistry
 
 | Component           | Address                                      |
 | ------------------- | -------------------------------------------- |
 | Proxy               | `0xa2B09263a7a41567D5F53b7d9F7CA1c6cc046CE2` |
-| Implementation (v1) | `0x8d8d5637966f222c89f03cd39f2df3f2f875ea0a` |
+| Implementation (v2) | `0xb728929ad10942612584171e4435c3899a887c53` |
 | ProxyAdmin          | `0x45c5a0dcac94c742c786dfb2e251556079d9e07a` |
 
 ### TAPReputationRegistry
@@ -21,7 +21,7 @@ Deployed: 2026-05-15
 | Component           | Address                                      |
 | ------------------- | -------------------------------------------- |
 | Proxy               | `0x591A56D98A14e8A88722F794981F00CabB328a91` |
-| Implementation (v1) | `0xbf95b7c742dcfaa45cdab522123c99a439223e42` |
+| Implementation (v2) | `0x6a6fd7f95870f1466336415cb85382284ba17109` |
 | ProxyAdmin          | `0x3c662ef36a1e6447bb7ce1809ebf4e37a2a1ec66` |
 
 ### Roles
@@ -37,18 +37,20 @@ Deployed: 2026-05-15
 ### Block Explorer Links
 
 - [TAPRegistry Proxy](https://donut.push.network/address/0xa2B09263a7a41567D5F53b7d9F7CA1c6cc046CE2)
-- [TAPRegistry Impl v1](https://donut.push.network/address/0x8d8d5637966f222c89f03cd39f2df3f2f875ea0a)
+- [TAPRegistry Impl v2](https://donut.push.network/address/0xb728929ad10942612584171e4435c3899a887c53)
 - [TAPReputationRegistry Proxy](https://donut.push.network/address/0x591A56D98A14e8A88722F794981F00CabB328a91)
-- [TAPReputationRegistry Impl v1](https://donut.push.network/address/0xbf95b7c742dcfaa45cdab522123c99a439223e42)
+- [TAPReputationRegistry Impl v2](https://donut.push.network/address/0x6a6fd7f95870f1466336415cb85382284ba17109)
 
 ---
 
-## Deployment History
+## Deployment & Upgrade History
 
-| Date       | Contract              | Impl Address    | Notes                    |
-| ---------- | --------------------- | --------------- | ------------------------ |
-| 2026-05-15 | TAPRegistry           | `0x8d8d...ea0a` | Fresh deployment (v1)    |
-| 2026-05-15 | TAPReputationRegistry | `0xbf95...3e42` | Fresh deployment (v1)    |
+| Date       | Contract              | Old Impl        | New Impl        | Notes                                                                      |
+| ---------- | --------------------- | --------------- | --------------- | -------------------------------------------------------------------------- |
+| 2026-05-15 | TAPRegistry           | —               | `0x8d8d...ea0a` | Fresh deployment (v1)                                                      |
+| 2026-05-15 | TAPReputationRegistry | —               | `0xbf95...3e42` | Fresh deployment (v1)                                                      |
+| 2026-05-20 | TAPRegistry           | `0x8d8d...ea0a` | `0xb728...7c53` | v2: batchBind, auto-bind on register, agentIdFromBinding, library errors   |
+| 2026-05-20 | TAPReputationRegistry | `0xbf95...3e42` | `0x6a6f...7109` | v2: library-namespaced errors (ReputationErrors.X)                         |
 
 ---
 
