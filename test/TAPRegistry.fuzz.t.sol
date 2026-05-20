@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {Test} from "forge-std/Test.sol";
 import {TAPRegistry} from "src/TAPRegistry.sol";
 import {ITAPRegistry} from "src/interfaces/ITAPRegistry.sol";
-import "src/libraries/RegistryErrors.sol";
+import {RegistryErrors} from "src/libraries/RegistryErrors.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
 import {UniversalAccountId} from "src/libraries/Types.sol";
 import {
@@ -151,7 +151,7 @@ contract TAPRegistryFuzz is Test {
         });
 
         vm.prank(caller);
-        vm.expectRevert(InvalidBindSignature.selector);
+        vm.expectRevert(RegistryErrors.InvalidBindSignature.selector);
         registry.bind(req);
     }
 
@@ -365,7 +365,7 @@ contract TAPRegistryFuzz is Test {
         ITAPRegistry.BindRequest[] memory reqs = new ITAPRegistry.BindRequest[](size);
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(BatchBindTooLarge.selector, size, 10));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.BatchBindTooLarge.selector, size, 10));
         registry.batchBind(reqs);
     }
 

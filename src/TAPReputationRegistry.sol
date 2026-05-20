@@ -12,22 +12,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {ITAPRegistry} from "./interfaces/ITAPRegistry.sol";
 import {ITAPReputationRegistry} from "./interfaces/ITAPReputationRegistry.sol";
-import {
-    AgentNotRegisteredForReputation,
-    StaleSubmission,
-    InvalidSeverity,
-    InvalidChainIdentifierReputation,
-    InvalidRegistryAddressReputation,
-    BindingNotLinked,
-    BatchTooLarge,
-    EmptyBatch,
-    InvalidDecimals,
-    InvalidTAPRegistryAddress,
-    InvalidInitializationAddress,
-    MaxSlashRecordsExceeded,
-    SummaryValueOutOfRange,
-    TooManyChainKeys
-} from "./libraries/ReputationErrors.sol";
+import {ReputationErrors} from "./libraries/ReputationErrors.sol";
 
 /// @title TAPReputationRegistry
 /// @notice Cross-chain agent reputation aggregator on Push Chain.
@@ -110,10 +95,10 @@ contract TAPReputationRegistry is
         address TAPRegistryAddr
     ) external initializer {
         if (admin == address(0) || pauser == address(0)) {
-            revert InvalidInitializationAddress();
+            revert ReputationErrors.InvalidInitializationAddress();
         }
         if (TAPRegistryAddr == address(0)) {
-            revert InvalidTAPRegistryAddress();
+            revert ReputationErrors.InvalidTAPRegistryAddress();
         }
 
         __AccessControl_init();
@@ -142,8 +127,8 @@ contract TAPReputationRegistry is
         ReputationSubmission[] calldata submissions
     ) external onlyRole(REPORTER_ROLE) whenNotPaused {
         uint256 len = submissions.length;
-        if (len == 0) revert EmptyBatch();
-        if (len > MAX_BATCH_SIZE) revert BatchTooLarge(len, MAX_BATCH_SIZE);
+        if (len == 0) revert ReputationErrors.EmptyBatch();
+        if (len > MAX_BATCH_SIZE) revert ReputationErrors.BatchTooLarge(len, MAX_BATCH_SIZE);
 
         uint256[] memory seenAgents = new uint256[](len);
         uint256 seenCount;
@@ -184,19 +169,19 @@ contract TAPReputationRegistry is
         uint256 severityBps
     ) external onlyRole(SLASHER_ROLE) whenNotPaused {
         if (severityBps == 0 || severityBps > MAX_BPS) {
-            revert InvalidSeverity(severityBps);
+            revert ReputationErrors.InvalidSeverity(severityBps);
         }
         if (bytes(chainNamespace).length == 0 || bytes(chainId).length == 0) {
-            revert InvalidChainIdentifierReputation();
+            revert ReputationErrors.InvalidChainIdentifierReputation();
         }
 
         TAPReputationRegistryStorage storage s = _getStorage();
         ITAPRegistry agentReg = ITAPRegistry(s.TAPRegistry);
         if (!agentReg.isRegistered(agentId)) {
-            revert AgentNotRegisteredForReputation(agentId);
+            revert ReputationErrors.AgentNotRegisteredForReputation(agentId);
         }
         if (s.slashRecords[agentId].length >= MAX_SLASH_RECORDS) {
-            revert MaxSlashRecordsExceeded(agentId);
+            revert ReputationErrors.MaxSlashRecordsExceeded(agentId);
         }
 
         s.slashRecords[agentId].push(
@@ -228,7 +213,7 @@ contract TAPReputationRegistry is
         TAPReputationRegistryStorage storage s = _getStorage();
         ITAPRegistry agentReg = ITAPRegistry(s.TAPRegistry);
         if (!agentReg.isRegistered(agentId)) {
-            revert AgentNotRegisteredForReputation(agentId);
+            revert ReputationErrors.AgentNotRegisteredForReputation(agentId);
         }
 
         ITAPRegistry.BindEntry[] memory entries = agentReg.getBindings(agentId);
@@ -272,7 +257,7 @@ contract TAPReputationRegistry is
         address newTAPRegistry
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (newTAPRegistry == address(0)) {
-            revert InvalidTAPRegistryAddress();
+            revert ReputationErrors.InvalidTAPRegistryAddress();
         }
         TAPReputationRegistryStorage storage s = _getStorage();
         address oldAddr = s.TAPRegistry;
@@ -382,25 +367,25 @@ contract TAPReputationRegistry is
         ReputationSubmission calldata sub
     ) internal {
         if (sub.valueDecimals > MAX_DECIMALS) {
-            revert InvalidDecimals(sub.valueDecimals);
+            revert ReputationErrors.InvalidDecimals(sub.valueDecimals);
         }
         int128 maxAbsolute =
             SafeCast.toInt128(int256(100) * int256(10 ** uint256(sub.valueDecimals)));
         if (sub.summaryValue > maxAbsolute || sub.summaryValue < -maxAbsolute) {
-            revert SummaryValueOutOfRange(sub.summaryValue, maxAbsolute);
+            revert ReputationErrors.SummaryValueOutOfRange(sub.summaryValue, maxAbsolute);
         }
         if (bytes(sub.chainNamespace).length == 0 || bytes(sub.chainId).length == 0) {
-            revert InvalidChainIdentifierReputation();
+            revert ReputationErrors.InvalidChainIdentifierReputation();
         }
         if (sub.registryAddress == address(0)) {
-            revert InvalidRegistryAddressReputation();
+            revert ReputationErrors.InvalidRegistryAddressReputation();
         }
 
         TAPReputationRegistryStorage storage s = _getStorage();
         ITAPRegistry agentReg = ITAPRegistry(s.TAPRegistry);
 
         if (!agentReg.isRegistered(sub.agentId)) {
-            revert AgentNotRegisteredForReputation(sub.agentId);
+            revert ReputationErrors.AgentNotRegisteredForReputation(sub.agentId);
         }
 
         _validateBinding(sub.agentId, sub.chainNamespace, sub.chainId);
@@ -410,13 +395,13 @@ contract TAPReputationRegistry is
         if (s.chainKeyExists[sub.agentId][chainKey]) {
             uint256 storedBlock = s.chainReputations[sub.agentId][chainKey].sourceBlockNumber;
             if (sub.sourceBlockNumber <= storedBlock) {
-                revert StaleSubmission(
+                revert ReputationErrors.StaleSubmission(
                     sub.agentId, sub.chainNamespace, sub.chainId, storedBlock, sub.sourceBlockNumber
                 );
             }
         } else {
             if (s.chainKeys[sub.agentId].length >= MAX_CHAIN_KEYS) {
-                revert TooManyChainKeys(sub.agentId, MAX_CHAIN_KEYS);
+                revert ReputationErrors.TooManyChainKeys(sub.agentId, MAX_CHAIN_KEYS);
             }
             s.chainKeys[sub.agentId].push(chainKey);
             s.chainKeyIndex[sub.agentId][chainKey] = s.chainKeys[sub.agentId].length - 1;
@@ -472,7 +457,7 @@ contract TAPReputationRegistry is
             }
         }
 
-        revert BindingNotLinked(agentId, chainNamespace, chainId);
+        revert ReputationErrors.BindingNotLinked(agentId, chainNamespace, chainId);
     }
 
     // ──────────────────────────────────────────────

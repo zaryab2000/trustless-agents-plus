@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {Test} from "forge-std/Test.sol";
 import {TAPRegistry} from "src/TAPRegistry.sol";
 import {ITAPRegistry} from "src/interfaces/ITAPRegistry.sol";
-import "src/libraries/RegistryErrors.sol";
+import {RegistryErrors} from "src/libraries/RegistryErrors.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
 import {MockERC1271Wallet} from "./mocks/MockERC1271Wallet.sol";
 import {UniversalAccountId} from "src/libraries/Types.sol";
@@ -200,7 +200,7 @@ contract TAPRegistryBindTest is Test {
         vm.prank(nobody);
         vm.expectRevert(
             abi.encodeWithSelector(
-                AgentNotRegistered.selector, uint256(uint160(nobody)) % 10_000_000
+                RegistryErrors.AgentNotRegistered.selector, uint256(uint160(nobody)) % 10_000_000
             )
         );
         registry.bind(req);
@@ -211,7 +211,7 @@ contract TAPRegistryBindTest is Test {
         req.deadline = block.timestamp - 1;
 
         vm.prank(ueaUser);
-        vm.expectRevert(abi.encodeWithSelector(BindExpired.selector, req.deadline));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.BindExpired.selector, req.deadline));
         registry.bind(req);
     }
 
@@ -241,7 +241,7 @@ contract TAPRegistryBindTest is Test {
             deadline: block.timestamp + 1 hours
         });
 
-        vm.expectRevert(abi.encodeWithSelector(BindNonceUsed.selector, 1));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.BindNonceUsed.selector, 1));
         registry.bind(req2);
         vm.stopPrank();
     }
@@ -270,7 +270,7 @@ contract TAPRegistryBindTest is Test {
         });
 
         vm.prank(ueaUser);
-        vm.expectRevert(InvalidBindSignature.selector);
+        vm.expectRevert(RegistryErrors.InvalidBindSignature.selector);
         registry.bind(req);
     }
 
@@ -287,7 +287,7 @@ contract TAPRegistryBindTest is Test {
         });
 
         vm.prank(ueaUser);
-        vm.expectRevert(InvalidBindSignature.selector);
+        vm.expectRevert(RegistryErrors.InvalidBindSignature.selector);
         registry.bind(req);
     }
 
@@ -296,7 +296,7 @@ contract TAPRegistryBindTest is Test {
         req.chainNamespace = "";
 
         vm.prank(ueaUser);
-        vm.expectRevert(InvalidChainIdentifier.selector);
+        vm.expectRevert(RegistryErrors.InvalidChainIdentifier.selector);
         registry.bind(req);
     }
 
@@ -305,7 +305,7 @@ contract TAPRegistryBindTest is Test {
         req.chainId = "";
 
         vm.prank(ueaUser);
-        vm.expectRevert(InvalidChainIdentifier.selector);
+        vm.expectRevert(RegistryErrors.InvalidChainIdentifier.selector);
         registry.bind(req);
     }
 
@@ -314,7 +314,7 @@ contract TAPRegistryBindTest is Test {
         req.registryAddress = address(0);
 
         vm.prank(ueaUser);
-        vm.expectRevert(InvalidRegistryAddress.selector);
+        vm.expectRevert(RegistryErrors.InvalidRegistryAddress.selector);
         registry.bind(req);
     }
 
@@ -346,7 +346,7 @@ contract TAPRegistryBindTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                BindingAlreadyClaimed.selector,
+                RegistryErrors.BindingAlreadyClaimed.selector,
                 "eip155",
                 "1",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
@@ -397,7 +397,7 @@ contract TAPRegistryBindTest is Test {
         vm.prank(ueaUser2);
         vm.expectRevert(
             abi.encodeWithSelector(
-                BindingAlreadyClaimed.selector,
+                RegistryErrors.BindingAlreadyClaimed.selector,
                 "eip155",
                 "1",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432),
@@ -455,7 +455,9 @@ contract TAPRegistryBindTest is Test {
             deadline: block.timestamp + 1 hours
         });
 
-        vm.expectRevert(abi.encodeWithSelector(MaxBindingsExceeded.selector, agentId));
+        vm.expectRevert(
+            abi.encodeWithSelector(RegistryErrors.MaxBindingsExceeded.selector, agentId)
+        );
         registry.bind(req65);
         vm.stopPrank();
     }
@@ -602,7 +604,7 @@ contract TAPRegistryBindTest is Test {
         vm.prank(nobody);
         vm.expectRevert(
             abi.encodeWithSelector(
-                AgentNotRegistered.selector, uint256(uint160(nobody)) % 10_000_000
+                RegistryErrors.AgentNotRegistered.selector, uint256(uint160(nobody)) % 10_000_000
             )
         );
         registry.unbind("eip155", "1", address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432));
@@ -612,7 +614,7 @@ contract TAPRegistryBindTest is Test {
         vm.prank(ueaUser);
         vm.expectRevert(
             abi.encodeWithSelector(
-                BindingNotFound.selector,
+                RegistryErrors.BindingNotFound.selector,
                 "eip155",
                 "1",
                 address(0x8004A169FB4a3325136EB29fA0ceB6D2e539a432)
@@ -915,7 +917,7 @@ contract TAPRegistryBindTest is Test {
         bytes memory proofData = _erc1271ProofData(walletUEA, bytes("dummy-sig"));
 
         vm.prank(walletUEA);
-        vm.expectRevert(InvalidBindSignature.selector);
+        vm.expectRevert(RegistryErrors.InvalidBindSignature.selector);
         registry.bind(
             ITAPRegistry.BindRequest({
                 chainNamespace: "eip155",
@@ -941,7 +943,7 @@ contract TAPRegistryBindTest is Test {
         bytes memory proofData = _erc1271ProofData(walletUEA, bytes("dummy-sig"));
 
         vm.prank(walletUEA);
-        vm.expectRevert(InvalidBindSignature.selector);
+        vm.expectRevert(RegistryErrors.InvalidBindSignature.selector);
         registry.bind(
             ITAPRegistry.BindRequest({
                 chainNamespace: "eip155",

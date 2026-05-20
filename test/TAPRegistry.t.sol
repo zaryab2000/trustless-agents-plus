@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {Test} from "forge-std/Test.sol";
 import {TAPRegistry} from "src/TAPRegistry.sol";
 import {ITAPRegistry} from "src/interfaces/ITAPRegistry.sol";
-import "src/libraries/RegistryErrors.sol";
+import {RegistryErrors} from "src/libraries/RegistryErrors.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
 import {UniversalAccountId} from "src/libraries/Types.sol";
 import {
@@ -120,7 +120,7 @@ contract TAPRegistryTest is Test {
 
     function test_Register_ZeroCardHash_Reverts() public {
         vm.prank(ueaUser);
-        vm.expectRevert(AgentCardHashRequired.selector);
+        vm.expectRevert(RegistryErrors.AgentCardHashRequired.selector);
         registry.register(AGENT_URI, bytes32(0));
     }
 
@@ -166,7 +166,7 @@ contract TAPRegistryTest is Test {
         registry.register(AGENT_URI, CARD_HASH);
 
         vm.prank(addr2);
-        vm.expectRevert(abi.encodeWithSelector(AgentIdCollision.selector, 1, addr1));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.AgentIdCollision.selector, 1, addr1));
         registry.register(AGENT_URI, CARD_HASH);
     }
 
@@ -205,7 +205,9 @@ contract TAPRegistryTest is Test {
         registry.register(AGENT_URI, CARD_HASH);
 
         vm.prank(addr2);
-        vm.expectRevert(abi.encodeWithSelector(AgentIdCollision.selector, 10_000_000, addr1));
+        vm.expectRevert(
+            abi.encodeWithSelector(RegistryErrors.AgentIdCollision.selector, 10_000_000, addr1)
+        );
         registry.register(AGENT_URI, CARD_HASH);
     }
 
@@ -322,7 +324,9 @@ contract TAPRegistryTest is Test {
         uint256 expectedId = uint256(uint160(nobody)) % 10_000_000;
 
         vm.prank(nobody);
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, expectedId));
+        vm.expectRevert(
+            abi.encodeWithSelector(RegistryErrors.AgentNotRegistered.selector, expectedId)
+        );
         registry.setAgentURI("ipfs://test");
     }
 
@@ -353,7 +357,7 @@ contract TAPRegistryTest is Test {
         vm.startPrank(ueaUser);
         registry.register(AGENT_URI, CARD_HASH);
 
-        vm.expectRevert(AgentCardHashRequired.selector);
+        vm.expectRevert(RegistryErrors.AgentCardHashRequired.selector);
         registry.setAgentCardHash(bytes32(0));
         vm.stopPrank();
     }
@@ -381,7 +385,7 @@ contract TAPRegistryTest is Test {
     }
 
     function test_OwnerOf_UnregisteredAgent_Reverts() public {
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, 999));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.AgentNotRegistered.selector, 999));
         registry.ownerOf(999);
     }
 
@@ -442,27 +446,27 @@ contract TAPRegistryTest is Test {
     // ──────────────────────────────────────────────
 
     function test_TransferFrom_Reverts() public {
-        vm.expectRevert(IdentityNotTransferable.selector);
+        vm.expectRevert(RegistryErrors.IdentityNotTransferable.selector);
         registry.transferFrom(ueaUser, admin, 1);
     }
 
     function test_SafeTransferFrom_Reverts() public {
-        vm.expectRevert(IdentityNotTransferable.selector);
+        vm.expectRevert(RegistryErrors.IdentityNotTransferable.selector);
         registry.safeTransferFrom(ueaUser, admin, 1);
     }
 
     function test_SafeTransferFromWithData_Reverts() public {
-        vm.expectRevert(IdentityNotTransferable.selector);
+        vm.expectRevert(RegistryErrors.IdentityNotTransferable.selector);
         registry.safeTransferFrom(ueaUser, admin, 1, "");
     }
 
     function test_Approve_Reverts() public {
-        vm.expectRevert(IdentityNotTransferable.selector);
+        vm.expectRevert(RegistryErrors.IdentityNotTransferable.selector);
         registry.approve(admin, 1);
     }
 
     function test_SetApprovalForAll_Reverts() public {
-        vm.expectRevert(IdentityNotTransferable.selector);
+        vm.expectRevert(RegistryErrors.IdentityNotTransferable.selector);
         registry.setApprovalForAll(admin, true);
     }
 
@@ -474,25 +478,25 @@ contract TAPRegistryTest is Test {
         address unregistered = makeAddr("unregistered");
         uint256 fakeId = uint256(uint160(unregistered)) % 10_000_000;
         vm.prank(unregistered);
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.AgentNotRegistered.selector, fakeId));
         registry.setAgentCardHash(keccak256("card"));
     }
 
     function test_TokenURI_NotRegistered_Reverts() public {
         uint256 fakeId = 12_345;
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.AgentNotRegistered.selector, fakeId));
         registry.tokenURI(fakeId);
     }
 
     function test_AgentURI_NotRegistered_Reverts() public {
         uint256 fakeId = 12_345;
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.AgentNotRegistered.selector, fakeId));
         registry.agentURI(fakeId);
     }
 
     function test_CanonicalUEA_NotRegistered_Reverts() public {
         uint256 fakeId = 12_345;
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegistered.selector, fakeId));
+        vm.expectRevert(abi.encodeWithSelector(RegistryErrors.AgentNotRegistered.selector, fakeId));
         registry.canonicalOwner(fakeId);
     }
 

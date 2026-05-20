@@ -1,21 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {
-    AgentNotRegistered,
-    AgentCardHashRequired,
-    UnsupportedProofType,
-    BindingAlreadyClaimed,
-    BindingNotFound,
-    BindExpired,
-    BindNonceUsed,
-    InvalidBindSignature,
-    InvalidChainIdentifier,
-    InvalidRegistryAddress,
-    IdentityNotTransferable,
-    MaxBindingsExceeded,
-    AgentIdCollision
-} from "../libraries/RegistryErrors.sol";
+import {RegistryErrors} from "../libraries/RegistryErrors.sol";
 
 /// @title ITAPRegistry
 /// @notice ERC-8004-compatible Universal Agent Identity Registry on Push Chain.

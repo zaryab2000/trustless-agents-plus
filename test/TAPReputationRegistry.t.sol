@@ -8,22 +8,7 @@ import {TAPReputationRegistry} from "src/TAPReputationRegistry.sol";
 import {ITAPReputationRegistry} from "src/interfaces/ITAPReputationRegistry.sol";
 import {MockUEAFactory} from "./mocks/MockUEAFactory.sol";
 import {UniversalAccountId} from "src/libraries/Types.sol";
-import {
-    AgentNotRegisteredForReputation,
-    StaleSubmission,
-    InvalidSeverity,
-    InvalidChainIdentifierReputation,
-    InvalidRegistryAddressReputation,
-    BindingNotLinked,
-    BatchTooLarge,
-    EmptyBatch,
-    InvalidDecimals,
-    InvalidTAPRegistryAddress,
-    MaxSlashRecordsExceeded,
-    SummaryValueOutOfRange,
-    TooManyChainKeys,
-    InvalidInitializationAddress
-} from "src/libraries/ReputationErrors.sol";
+import {ReputationErrors} from "src/libraries/ReputationErrors.sol";
 import {
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -296,7 +281,9 @@ contract TAPReputationRegistryTest is Test {
         sub.agentId = 999;
 
         vm.prank(reporter);
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegisteredForReputation.selector, 999));
+        vm.expectRevert(
+            abi.encodeWithSelector(ReputationErrors.AgentNotRegisteredForReputation.selector, 999)
+        );
         repRegistry.submitReputation(sub);
     }
 
@@ -306,7 +293,11 @@ contract TAPReputationRegistryTest is Test {
         sub.chainId = "137";
 
         vm.prank(reporter);
-        vm.expectRevert(abi.encodeWithSelector(BindingNotLinked.selector, agentId, "eip155", "137"));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ReputationErrors.BindingNotLinked.selector, agentId, "eip155", "137"
+            )
+        );
         repRegistry.submitReputation(sub);
     }
 
@@ -319,7 +310,9 @@ contract TAPReputationRegistryTest is Test {
         sub.sourceBlockNumber = 999;
         vm.prank(reporter);
         vm.expectRevert(
-            abi.encodeWithSelector(StaleSubmission.selector, agentId, "eip155", "1", 1000, 999)
+            abi.encodeWithSelector(
+                ReputationErrors.StaleSubmission.selector, agentId, "eip155", "1", 1000, 999
+            )
         );
         repRegistry.submitReputation(sub);
     }
@@ -332,7 +325,9 @@ contract TAPReputationRegistryTest is Test {
 
         vm.prank(reporter);
         vm.expectRevert(
-            abi.encodeWithSelector(StaleSubmission.selector, agentId, "eip155", "1", 1000, 1000)
+            abi.encodeWithSelector(
+                ReputationErrors.StaleSubmission.selector, agentId, "eip155", "1", 1000, 1000
+            )
         );
         repRegistry.submitReputation(sub);
     }
@@ -342,7 +337,7 @@ contract TAPReputationRegistryTest is Test {
         sub.valueDecimals = 19;
 
         vm.prank(reporter);
-        vm.expectRevert(abi.encodeWithSelector(InvalidDecimals.selector, 19));
+        vm.expectRevert(abi.encodeWithSelector(ReputationErrors.InvalidDecimals.selector, 19));
         repRegistry.submitReputation(sub);
     }
 
@@ -382,7 +377,7 @@ contract TAPReputationRegistryTest is Test {
         sub.chainId = "";
 
         vm.prank(reporter);
-        vm.expectRevert(InvalidChainIdentifierReputation.selector);
+        vm.expectRevert(ReputationErrors.InvalidChainIdentifierReputation.selector);
         repRegistry.submitReputation(sub);
     }
 
@@ -391,7 +386,7 @@ contract TAPReputationRegistryTest is Test {
         sub.registryAddress = address(0);
 
         vm.prank(reporter);
-        vm.expectRevert(InvalidRegistryAddressReputation.selector);
+        vm.expectRevert(ReputationErrors.InvalidRegistryAddressReputation.selector);
         repRegistry.submitReputation(sub);
     }
 
@@ -509,7 +504,7 @@ contract TAPReputationRegistryTest is Test {
             new ITAPReputationRegistry.ReputationSubmission[](51);
 
         vm.prank(reporter);
-        vm.expectRevert(abi.encodeWithSelector(BatchTooLarge.selector, 51, 50));
+        vm.expectRevert(abi.encodeWithSelector(ReputationErrors.BatchTooLarge.selector, 51, 50));
         repRegistry.batchSubmitReputation(subs);
     }
 
@@ -518,7 +513,7 @@ contract TAPReputationRegistryTest is Test {
             new ITAPReputationRegistry.ReputationSubmission[](0);
 
         vm.prank(reporter);
-        vm.expectRevert(EmptyBatch.selector);
+        vm.expectRevert(ReputationErrors.EmptyBatch.selector);
         repRegistry.batchSubmitReputation(subs);
     }
 
@@ -619,7 +614,9 @@ contract TAPReputationRegistryTest is Test {
 
     function test_Reaggregate_AgentNotRegistered_Reverts() public {
         vm.prank(nobody);
-        vm.expectRevert(abi.encodeWithSelector(AgentNotRegisteredForReputation.selector, 999));
+        vm.expectRevert(
+            abi.encodeWithSelector(ReputationErrors.AgentNotRegisteredForReputation.selector, 999)
+        );
         repRegistry.reaggregate(999);
     }
 
@@ -742,13 +739,13 @@ contract TAPReputationRegistryTest is Test {
 
     function test_Slash_InvalidSeverity_Zero_Reverts() public {
         vm.prank(slasher);
-        vm.expectRevert(abi.encodeWithSelector(InvalidSeverity.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(ReputationErrors.InvalidSeverity.selector, 0));
         repRegistry.slash(agentId, "eip155", "1", "fraud", keccak256("proof"), 0);
     }
 
     function test_Slash_InvalidSeverity_Over10000_Reverts() public {
         vm.prank(slasher);
-        vm.expectRevert(abi.encodeWithSelector(InvalidSeverity.selector, 10_001));
+        vm.expectRevert(abi.encodeWithSelector(ReputationErrors.InvalidSeverity.selector, 10_001));
         repRegistry.slash(agentId, "eip155", "1", "fraud", keccak256("proof"), 10_001);
     }
 
@@ -866,7 +863,7 @@ contract TAPReputationRegistryTest is Test {
 
     function test_SetTAPRegistry_ZeroAddr_Reverts() public {
         vm.prank(admin);
-        vm.expectRevert(InvalidTAPRegistryAddress.selector);
+        vm.expectRevert(ReputationErrors.InvalidTAPRegistryAddress.selector);
         repRegistry.setTAPRegistry(address(0));
     }
 
@@ -898,7 +895,9 @@ contract TAPReputationRegistryTest is Test {
         vm.prank(reporter);
         vm.expectRevert(
             abi.encodeWithSelector(
-                SummaryValueOutOfRange.selector, int128(101 * 1e18), int128(100 * 1e18)
+                ReputationErrors.SummaryValueOutOfRange.selector,
+                int128(101 * 1e18),
+                int128(100 * 1e18)
             )
         );
         repRegistry.submitReputation(sub);
@@ -910,7 +909,9 @@ contract TAPReputationRegistryTest is Test {
         vm.prank(reporter);
         vm.expectRevert(
             abi.encodeWithSelector(
-                SummaryValueOutOfRange.selector, int128(-101 * 1e18), int128(100 * 1e18)
+                ReputationErrors.SummaryValueOutOfRange.selector,
+                int128(-101 * 1e18),
+                int128(100 * 1e18)
             )
         );
         repRegistry.submitReputation(sub);
@@ -971,7 +972,9 @@ contract TAPReputationRegistryTest is Test {
                 sourceBlockNumber: 1000
             });
         vm.prank(reporter);
-        vm.expectRevert(abi.encodeWithSelector(TooManyChainKeys.selector, agentId, 64));
+        vm.expectRevert(
+            abi.encodeWithSelector(ReputationErrors.TooManyChainKeys.selector, agentId, 64)
+        );
         repRegistry.submitReputation(sub);
     }
 
@@ -1014,7 +1017,7 @@ contract TAPReputationRegistryTest is Test {
 
     function test_Initialize_ZeroAdmin_Reverts() public {
         TAPReputationRegistry impl = new TAPReputationRegistry();
-        vm.expectRevert(InvalidInitializationAddress.selector);
+        vm.expectRevert(ReputationErrors.InvalidInitializationAddress.selector);
         new TransparentUpgradeableProxy(
             address(impl),
             admin,
@@ -1026,7 +1029,7 @@ contract TAPReputationRegistryTest is Test {
 
     function test_Initialize_ZeroPauser_Reverts() public {
         TAPReputationRegistry impl = new TAPReputationRegistry();
-        vm.expectRevert(InvalidInitializationAddress.selector);
+        vm.expectRevert(ReputationErrors.InvalidInitializationAddress.selector);
         new TransparentUpgradeableProxy(
             address(impl),
             admin,
@@ -1060,17 +1063,17 @@ contract TAPReputationRegistryTest is Test {
         TAPReputationRegistry impl = new TAPReputationRegistry();
         bytes memory initData =
             abi.encodeCall(TAPReputationRegistry.initialize, (admin, pauser, address(0)));
-        vm.expectRevert(InvalidTAPRegistryAddress.selector);
+        vm.expectRevert(ReputationErrors.InvalidTAPRegistryAddress.selector);
         new TransparentUpgradeableProxy(address(impl), admin, initData);
     }
 
     function test_Slash_EmptyChainIdentifier_Reverts() public {
         vm.startPrank(slasher);
 
-        vm.expectRevert(InvalidChainIdentifierReputation.selector);
+        vm.expectRevert(ReputationErrors.InvalidChainIdentifierReputation.selector);
         repRegistry.slash(agentId, "", "1", "reason", keccak256("e"), 1000);
 
-        vm.expectRevert(InvalidChainIdentifierReputation.selector);
+        vm.expectRevert(ReputationErrors.InvalidChainIdentifierReputation.selector);
         repRegistry.slash(agentId, "eip155", "", "reason", keccak256("e"), 1000);
 
         vm.stopPrank();
@@ -1080,7 +1083,9 @@ contract TAPReputationRegistryTest is Test {
         uint256 fakeAgentId = 999;
         vm.prank(slasher);
         vm.expectRevert(
-            abi.encodeWithSelector(AgentNotRegisteredForReputation.selector, fakeAgentId)
+            abi.encodeWithSelector(
+                ReputationErrors.AgentNotRegisteredForReputation.selector, fakeAgentId
+            )
         );
         repRegistry.slash(fakeAgentId, "eip155", "1", "reason", keccak256("e"), 1000);
     }
@@ -1091,7 +1096,9 @@ contract TAPReputationRegistryTest is Test {
             repRegistry.slash(agentId, "eip155", "1", "reason", keccak256(abi.encode(i)), 1);
         }
 
-        vm.expectRevert(abi.encodeWithSelector(MaxSlashRecordsExceeded.selector, agentId));
+        vm.expectRevert(
+            abi.encodeWithSelector(ReputationErrors.MaxSlashRecordsExceeded.selector, agentId)
+        );
         repRegistry.slash(agentId, "eip155", "1", "reason", keccak256("e"), 1);
         vm.stopPrank();
     }

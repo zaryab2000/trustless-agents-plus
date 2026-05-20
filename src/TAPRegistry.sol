@@ -19,23 +19,7 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IUEAFactory} from "./interfaces/IUEAFactory.sol";
 import {UniversalAccountId} from "./libraries/Types.sol";
 import {ITAPRegistry} from "./interfaces/ITAPRegistry.sol";
-import {
-    AgentNotRegistered,
-    AgentCardHashRequired,
-    UnsupportedProofType,
-    BindingAlreadyClaimed,
-    BindingNotFound,
-    BindExpired,
-    BindNonceUsed,
-    InvalidBindSignature,
-    InvalidChainIdentifier,
-    InvalidRegistryAddress,
-    IdentityNotTransferable,
-    MaxBindingsExceeded,
-    AgentIdCollision,
-    BatchBindTooLarge,
-    EmptyBindBatch
-} from "./libraries/RegistryErrors.sol";
+import {RegistryErrors} from "./libraries/RegistryErrors.sol";
 
 /// @title TAPRegistry
 /// @notice ERC-8004-compatible Universal Agent Identity Registry on Push Chain.
@@ -120,7 +104,7 @@ contract TAPRegistry is
         string calldata _agentURI,
         bytes32 agentCardHash
     ) external whenNotPaused returns (uint256 agentId) {
-        if (agentCardHash == bytes32(0)) revert AgentCardHashRequired();
+        if (agentCardHash == bytes32(0)) revert RegistryErrors.AgentCardHashRequired();
 
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[msg.sender];
@@ -166,7 +150,9 @@ contract TAPRegistry is
         agentId = uint256(uint160(msg.sender)) % 10_000_000;
         if (agentId == 0) agentId = 10_000_000;
         if (s.records[agentId].registered) {
-            revert AgentIdCollision(agentId, _ownerKeyToAddress(s.records[agentId].ownerKey));
+            revert RegistryErrors.AgentIdCollision(
+                agentId, _ownerKeyToAddress(s.records[agentId].ownerKey)
+            );
         }
 
         AgentRecord storage record = s.records[agentId];
@@ -199,7 +185,9 @@ contract TAPRegistry is
     ) external whenNotPaused {
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[msg.sender];
-        if (raw == 0) revert AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        if (raw == 0) {
+            revert RegistryErrors.AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        }
         uint256 agentId = raw - 1;
         s.records[agentId].agentURI = newAgentURI;
         emit AgentURIUpdated(agentId, newAgentURI);
@@ -209,10 +197,12 @@ contract TAPRegistry is
     function setAgentCardHash(
         bytes32 newHash
     ) external whenNotPaused {
-        if (newHash == bytes32(0)) revert AgentCardHashRequired();
+        if (newHash == bytes32(0)) revert RegistryErrors.AgentCardHashRequired();
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[msg.sender];
-        if (raw == 0) revert AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        if (raw == 0) {
+            revert RegistryErrors.AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        }
         uint256 agentId = raw - 1;
         s.records[agentId].agentCardHash = newHash;
         emit AgentCardHashUpdated(agentId, newHash);
@@ -228,7 +218,9 @@ contract TAPRegistry is
     ) external whenNotPaused {
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[msg.sender];
-        if (raw == 0) revert AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        if (raw == 0) {
+            revert RegistryErrors.AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        }
         _bindSingle(s, raw - 1, req);
     }
 
@@ -237,12 +229,16 @@ contract TAPRegistry is
         BindRequest[] calldata requests
     ) external whenNotPaused {
         uint256 len = requests.length;
-        if (len == 0) revert EmptyBindBatch();
-        if (len > MAX_BATCH_BINDINGS) revert BatchBindTooLarge(len, MAX_BATCH_BINDINGS);
+        if (len == 0) revert RegistryErrors.EmptyBindBatch();
+        if (len > MAX_BATCH_BINDINGS) {
+            revert RegistryErrors.BatchBindTooLarge(len, MAX_BATCH_BINDINGS);
+        }
 
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[msg.sender];
-        if (raw == 0) revert AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        if (raw == 0) {
+            revert RegistryErrors.AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        }
         uint256 agentId = raw - 1;
 
         for (uint256 i; i < len; i++) {
@@ -258,12 +254,14 @@ contract TAPRegistry is
     ) external whenNotPaused {
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[msg.sender];
-        if (raw == 0) revert AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        if (raw == 0) {
+            revert RegistryErrors.AgentNotRegistered(uint256(uint160(msg.sender)) % 10_000_000);
+        }
         uint256 agentId = raw - 1;
 
         bytes32 chainKey = keccak256(abi.encode(chainNamespace, chainId, registryAddress));
         if (!s.bindExists[agentId][chainKey]) {
-            revert BindingNotFound(chainNamespace, chainId, registryAddress);
+            revert RegistryErrors.BindingNotFound(chainNamespace, chainId, registryAddress);
         }
 
         uint256 idx = s.bindIndex[agentId][chainKey];
@@ -303,7 +301,7 @@ contract TAPRegistry is
         uint256 agentId
     ) external view returns (address) {
         TAPRegistryStorage storage s = _getStorage();
-        if (!s.records[agentId].registered) revert AgentNotRegistered(agentId);
+        if (!s.records[agentId].registered) revert RegistryErrors.AgentNotRegistered(agentId);
         return _ownerKeyToAddress(s.records[agentId].ownerKey);
     }
 
@@ -313,7 +311,7 @@ contract TAPRegistry is
     ) external view returns (string memory) {
         TAPRegistryStorage storage s = _getStorage();
         if (!s.records[agentId].registered) {
-            revert AgentNotRegistered(agentId);
+            revert RegistryErrors.AgentNotRegistered(agentId);
         }
         return s.records[agentId].agentURI;
     }
@@ -324,7 +322,7 @@ contract TAPRegistry is
     ) external view returns (string memory) {
         TAPRegistryStorage storage s = _getStorage();
         if (!s.records[agentId].registered) {
-            revert AgentNotRegistered(agentId);
+            revert RegistryErrors.AgentNotRegistered(agentId);
         }
         return s.records[agentId].agentURI;
     }
@@ -338,7 +336,7 @@ contract TAPRegistry is
         uint256 agentId
     ) external view returns (address) {
         TAPRegistryStorage storage s = _getStorage();
-        if (!s.records[agentId].registered) revert AgentNotRegistered(agentId);
+        if (!s.records[agentId].registered) revert RegistryErrors.AgentNotRegistered(agentId);
         return _ownerKeyToAddress(s.records[agentId].ownerKey);
     }
 
@@ -401,7 +399,7 @@ contract TAPRegistry is
         address,
         uint256
     ) external pure {
-        revert IdentityNotTransferable();
+        revert RegistryErrors.IdentityNotTransferable();
     }
 
     /// @inheritdoc ITAPRegistry
@@ -410,7 +408,7 @@ contract TAPRegistry is
         address,
         uint256
     ) external pure {
-        revert IdentityNotTransferable();
+        revert RegistryErrors.IdentityNotTransferable();
     }
 
     /// @inheritdoc ITAPRegistry
@@ -420,7 +418,7 @@ contract TAPRegistry is
         uint256,
         bytes calldata
     ) external pure {
-        revert IdentityNotTransferable();
+        revert RegistryErrors.IdentityNotTransferable();
     }
 
     /// @inheritdoc ITAPRegistry
@@ -428,7 +426,7 @@ contract TAPRegistry is
         address,
         uint256
     ) external pure {
-        revert IdentityNotTransferable();
+        revert RegistryErrors.IdentityNotTransferable();
     }
 
     /// @inheritdoc ITAPRegistry
@@ -436,7 +434,7 @@ contract TAPRegistry is
         address,
         bool
     ) external pure {
-        revert IdentityNotTransferable();
+        revert RegistryErrors.IdentityNotTransferable();
     }
 
     // ──────────────────────────────────────────────
@@ -472,19 +470,19 @@ contract TAPRegistry is
         BindRequest calldata req
     ) private {
         if (bytes(req.chainNamespace).length == 0 || bytes(req.chainId).length == 0) {
-            revert InvalidChainIdentifier();
+            revert RegistryErrors.InvalidChainIdentifier();
         }
         if (req.registryAddress == address(0)) {
-            revert InvalidRegistryAddress();
+            revert RegistryErrors.InvalidRegistryAddress();
         }
         if (req.proofType != BindProofType.OWNER_KEY_SIGNED) {
-            revert UnsupportedProofType();
+            revert RegistryErrors.UnsupportedProofType();
         }
         if (req.deadline < block.timestamp) {
-            revert BindExpired(req.deadline);
+            revert RegistryErrors.BindExpired(req.deadline);
         }
         if (s.usedNonces[agentId][req.nonce]) {
-            revert BindNonceUsed(req.nonce);
+            revert RegistryErrors.BindNonceUsed(req.nonce);
         }
 
         s.usedNonces[agentId][req.nonce] = true;
@@ -493,16 +491,16 @@ contract TAPRegistry is
             abi.encode(req.chainNamespace, req.chainId, req.registryAddress, req.boundAgentId)
         );
         if (s.bindToCanonical[dedupKey] != 0) {
-            revert BindingAlreadyClaimed(
+            revert RegistryErrors.BindingAlreadyClaimed(
                 req.chainNamespace, req.chainId, req.registryAddress, req.boundAgentId
             );
         }
         if (s.bindings[agentId].length >= MAX_BINDINGS) {
-            revert MaxBindingsExceeded(agentId);
+            revert RegistryErrors.MaxBindingsExceeded(agentId);
         }
 
         bool verified = _verifyBindSignature(msg.sender, req);
-        if (!verified) revert InvalidBindSignature();
+        if (!verified) revert RegistryErrors.InvalidBindSignature();
 
         s.bindings[agentId].push(
             BindEntry({
@@ -554,7 +552,9 @@ contract TAPRegistry is
 
         TAPRegistryStorage storage s = _getStorage();
         uint256 raw = s.ownerToAgentId[callerAddr];
-        if (raw == 0) revert AgentNotRegistered(uint256(uint160(callerAddr)) % 10_000_000);
+        if (raw == 0) {
+            revert RegistryErrors.AgentNotRegistered(uint256(uint160(callerAddr)) % 10_000_000);
+        }
         uint256 agentId = raw - 1;
         address expectedSigner = _ownerKeyToAddress(s.records[agentId].ownerKey);
 
