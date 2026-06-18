@@ -1,5 +1,7 @@
 # TAP — Trustless Agents Plus
 
+<img width="2752" height="1536" alt="Trustless Agents Plus" src="https://github.com/user-attachments/assets/4a759242-d3c7-4436-bf1b-c7bdebd23c15" />
+
 One canonical identity. One aggregated reputation score. Across every chain.
 
 TAP extends [ERC-8004](https://ethereum-magicians.org/t/erc-8004-trustless-agents/25098) with cross-chain identity unification and reputation aggregation for on-chain AI agents. It lives on [Push Chain](https://push.org/chain) and works with existing ERC-8004 agents on any supported chain — no migration required.
